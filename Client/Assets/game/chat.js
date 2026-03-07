@@ -903,13 +903,6 @@ class Chat {
         }
     }
 
-    updateTempMessages() {
-        const now = Date.now();
-        this.tempMessages = this.tempMessages.filter(
-            (msg) => now - msg.timestamp < this.messageDuration
-        );
-    }
-
     historyCycle() {
         if (input.isKeyPressed("ArrowUp")) {
             if (this.chatLog.length > 0) {
@@ -1069,18 +1062,18 @@ class Chat {
                 this.openChat();
             }
             if (input.isKeyPressed("Slash")) {
+                this.currentMessage = "/";
                 this.openChat();
                 this.cursorPosition = 1;
             }
-        }
 
-        if (input.isKeyPressed("Enter")) {
-            if (this.inChat) {
-                this.send();
-            }
+            // check message duration and hide if elapsed
+            const now = Date.now();
+            this.tempMessages = this.tempMessages.filter(
+                (msg) => now - msg.timestamp < this.messageDuration
+            );
         }
-
-        if (this.inChat) {
+        else {
             if (input.isKeyPressed("Escape")) this.closeChat();
 
             this.updateTyping();
@@ -1091,8 +1084,10 @@ class Chat {
                 this.showCursor = !this.showCursor;
                 this.cursorBlinkTime = 0;
             }
-        } else {
-            this.updateTempMessages();
+
+            if (input.isKeyPressed("Enter")) {
+                this.send();
+            }
         }
     }
 }
