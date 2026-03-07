@@ -40,6 +40,7 @@ const quickConnectButton = document.getElementById("quick-connect-btn");
 const connectButton = document.getElementById("connect-btn");
 
 const optionsContainer = document.querySelector("#options-container");
+const skinPreviewCanvas = document.getElementById("skin-preview-canvas");
 
 const musicToggleButton = document.getElementById("music-toggle-btn");
 const sfxToggleButton = document.getElementById("sfx-toggle-btn");
@@ -211,6 +212,25 @@ function loadSettings() {
     setUsernameFooter(currentSettings.username);
 
     usernameInput.value = "";
+}
+
+function updateSkinPreview() {
+    if (!skinPreviewCanvas || typeof drawSkinPreview !== "function") return;
+
+    const skinData = localStorage.getItem("playerSkin");
+    const skinSrc = skinData || "Assets/sprites/entity/steve.png";
+
+    const img = new Image();
+    img.onload = () => {
+        const ctx = skinPreviewCanvas.getContext("2d");
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, skinPreviewCanvas.width, skinPreviewCanvas.height);
+        const scale = 6;
+        const skinWidth = 16 * scale;
+        const baseX = (skinPreviewCanvas.width - skinWidth) / 2;
+        drawSkinPreview(ctx, img, baseX, 0, scale);
+    };
+    img.src = skinSrc;
 }
 
 loadSettings();
@@ -480,6 +500,7 @@ function uploadSkin() {
                 const skinData = event.target.result;
                 localStorage.setItem("playerSkin", skinData);
                 alert("Skin uploaded successfully!");
+                updateSkinPreview();
             };
             reader.readAsDataURL(file);
         } else {
@@ -494,6 +515,7 @@ function clearSkin() {
     if (confirm("Are you sure you want to remove your skin?")) {
         localStorage.removeItem("playerSkin");
         alert("Skin removed successfully!");
+        updateSkinPreview();
     }
 }
 
@@ -1191,6 +1213,7 @@ function gotoOptions() {
     optionsContainer.style.display = "flex";
 
     loadSettings();
+    updateSkinPreview();
 }
 
 function showMenu() {
