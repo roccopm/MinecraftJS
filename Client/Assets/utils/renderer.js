@@ -595,6 +595,8 @@ function drawSimpleImage({
     );
 }
 
+const imageCache = new Map();
+
 function drawImage({
     url,
     image,
@@ -615,8 +617,12 @@ function drawImage({
 
     let img = null;
     if (!image) {
-        img = new Image();
-        img.src = url;
+        if (!imageCache.has(url)) {
+            const newImg = new Image();
+            newImg.src = url;
+            imageCache.set(url, newImg);
+        }
+        img = imageCache.get(url);
     } else {
         img = image;
     }
