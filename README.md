@@ -16,8 +16,8 @@ It is, from my research, the most complete 2D Minecraft fan game you can play in
 
 ### Option 1 - Node.js
 To get set up, run `npm install` in both the Client and Server directories.
-You can then run `npx serve Client` in the root directory to host the client on `localhost:3000`.
-There is no hot-reloading, so any changes will require a page refresh.
+You can then run `npx serve Client` in the root directory to host the client on `localhost:3000`. There is no hot-reloading, so any changes will require a page refresh.
+To host a server, run `node server.js` from the Server directory. By default, this hosts on port 25565.
 
 ### Option 2 - Docker
 If you wish to build the project with Docker, you can run:
