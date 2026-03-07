@@ -1,0 +1,13 @@
+# MinecraftJS
+A 2D Minecraft fan game written entirely in Javascript using no engines or frameworks!
+
+It is, from my research, the most complete 2D Minecraft fan game you can play in your browser!
+
+<img width="347" height="250" alt="image" src="https://github.com/user-attachments/assets/8887900d-74a3-48fa-8b2b-ed847bfb1542" />
+<img width="347" height="164" alt="image" src="https://github.com/user-attachments/assets/e02b5c4a-51d4-4acf-909d-e3fda66dd596" />
+<img width="347" height="347" alt="image" src="https://github.com/user-attachments/assets/028fe645-77a4-4078-94c3-c4731c0bc4cf" />
+<img width="347" height="198" alt="image" src="https://github.com/user-attachments/assets/425700cd-c5a2-4c3d-9dac-3027e4e04460" />
+
+
+> [!IMPORTANT]
+> This game is playable but still under development. Expect some minor issues. Please feel free to report any that you come across!
