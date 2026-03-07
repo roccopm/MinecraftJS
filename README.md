@@ -11,3 +11,7 @@ It is, from my research, the most complete 2D Minecraft fan game you can play in
 
 > [!IMPORTANT]
 > This game is playable but still under development. Expect some minor issues. Please feel free to report any that you come across!
+
+## Local Development
+To get set up, run `npm install` in both the Client and Server directories.
+You can then run `npx serve Client` in the root directory to host the client on `localhost:3000`.
