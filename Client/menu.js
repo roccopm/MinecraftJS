@@ -231,7 +231,6 @@ function showTexturePacks() {
 function playGame() {
     buttonSound();
     menuContainer.style.display = "none";
-    panorama.style.display = "none";
     worldSelectContainer.style.display = "flex";
     footer.style.display = "none";
     populateWorlds();
@@ -538,7 +537,6 @@ function gotoWorldCreate() {
     buttonSound();
     worldCreateContainer.style.display = "flex";
     menuContainer.style.display = "none";
-    panorama.style.display = "none";
     worldSelectContainer.style.display = "none";
     footer.style.display = "none";
 }
@@ -1219,7 +1217,6 @@ function showMenu() {
 
 function hideMenu() {
     menuContainer.style.display = "none";
-    panorama.style.display = "none";
     worldSelectContainer.style.display = "none";
     footer.style.display = "none";
     texturePackSelectContainer.style.display = "none";

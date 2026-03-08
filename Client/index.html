@@ -25,10 +25,10 @@
 
         <div class="footer">
             <p>
-                Made by Plekiko - For the best experience use Firefox<br />
-                <a class="footer-button" onclick="downloadServer()"
-                    >Download Server</a
-                >
+                Made by Plekiko<br />
+                <a class="footer-button" href="https://github.com/plekiko/MinecraftJS" target="_blank">
+                    View Source Code on GitHub
+                </a>
             </p>
         </div>
         <div class="menu-container">
@@ -54,7 +54,7 @@
             <div class="buttons">
                 <a onclick="playGame()" class="btn">Singleplayer</a>
                 <a onclick="multiplayerButton()" class="btn"
-                    >Multiplayer (beta)</a
+                    >Multiplayer</a
                 >
                 <a
                     href="https://buymeacoffee.com/plekiko"
@@ -71,19 +71,8 @@
         <div class="world-select-container" id="world-select-container">
             <div class="world-select-container-text">
                 <div class="big-text">Select World</div>
-                <button onclick="backToMenu()" id="" class="btn">Back</button>
                 <div class="world-select">
-                    <div class="world-container">
-                        <img
-                            alt="World Preview"
-                            src="Assets/sprites/menu/worldPreview.png"
-                            class="world-image"
-                        />
-                        <div class="world-data-container">
-                            <div class="world-name">Test World</div>
-                            <div class="world-date">Right Now</div>
-                        </div>
-                    </div>
+                    <!-- Worlds are inserted at runtime here -->
                 </div>
 
                 <div class="world-buttons-container">
@@ -92,30 +81,27 @@
                         id="create-new-btn"
                         class="btn"
                     >
-                        Create new world
+                        Create New World
                     </button>
                     <button
                         onclick="playSelectedWorld()"
                         id="play-selected-btn"
                         class="btn"
                     >
-                        Play selected world
+                        Play Selected World
                     </button>
+                    <button class="btn" disabled>Edit</button>
                     <button
                         onclick="removeWorld()"
                         id="remove-world-btn"
                         class="btn"
                     >
-                        Remove selected world
+                        Delete
                     </button>
+                    <button class="btn" disabled>Re-Create</button>
+                    <button onclick="backToMenu()" id="" class="btn">Back</button>
                 </div>
             </div>
-            <div class="world-select-bar-container">
-                <div class="world-select-bar"></div>
-                <div class="world-select-bar"></div>
-            </div>
-
-            <div src="Assets/sprites/blocks/dirt.png" class="background"></div>
         </div>
 
         <div class="world-select-container" id="texture-pack-select-container">
@@ -161,13 +147,11 @@
                 <div class="world-select-bar"></div>
                 <div class="world-select-bar"></div>
             </div>
-            <div src="Assets/sprites/blocks/dirt.png" class="background"></div>
         </div>
 
         <div class="world-select-container" id="server-select-container">
             <div class="world-select-container-text">
-                <div class="big-text">Servers</div>
-                <button onclick="backToMenu()" class="btn">Back</button>
+                <div class="big-text">Play Multiplayer</div>
                 <div class="world-select" id="server-list">
                     <!-- Servers will be dynamically added here -->
                 </div>
@@ -180,34 +164,33 @@
                     >
                         Add Server
                     </button>
-                    <!-- <button
-                        onclick="gotoQuickConnect()"
-                        id="quick-connect-btn"
-                        class="btn"
-                    >
-                        Quick Connect
-                    </button> -->
                     <button
                         onclick="connectToServer()"
                         id="connect-btn"
                         class="btn"
                     >
-                        Connect to Server
+                        Join Server
                     </button>
                     <button
                         onclick="removeServer()"
                         id="remove-server-btn"
                         class="btn"
                     >
-                        Remove Selected Server
+                        Delete
                     </button>
+                    <button
+                        onclick="gotoQuickConnect()"
+                        id="quick-connect-btn"
+                        class="btn"
+                    >
+                        Direct Connection
+                    </button>
+                    <button
+                        class="btn"
+                    >Refresh</button>
+                    <button onclick="backToMenu()" class="btn">Back</button>
                 </div>
             </div>
-            <div class="world-select-bar-container">
-                <div class="world-select-bar"></div>
-                <div class="world-select-bar"></div>
-            </div>
-            <div src="Assets/sprites/blocks/dirt.png" class="background"></div>
         </div>
 
         <div class="modal-container" id="add-server-container">
