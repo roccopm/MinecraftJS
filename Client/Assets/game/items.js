@@ -66,6 +66,7 @@ const Items = Object.freeze({
 
     Leather: 50,
     Bone: 51,
+    Gunpowder: 52,
 
     Seeds: 100,
 
@@ -680,6 +681,11 @@ const items = [
         itemId: 51,
         name: "Bone",
         sprite: "bone",
+    }),
+    new Item({
+        itemId: 52,
+        name: "Gunpowder",
+        sprite: "gunpowder",
     }),
     //#endregion
 

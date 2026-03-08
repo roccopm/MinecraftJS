@@ -22,7 +22,13 @@ class Creeper extends Mob {
             myChunkX: myChunkX,
             ambientSounds: null,
             footstepSounds: null,
-            lootTable: null,
+            lootTable: new LootTable([
+                new LootItem({
+                    itemId: Items.Gunpowder,
+                    maxCount: 2,
+                    subtract: 1,
+                }),
+            ]),
         });
 
         this.fuse = -1;
@@ -190,6 +196,7 @@ class Creeper extends Mob {
     }
 
     dieEvent() {
+        this.dropLoot();
         removeEntity(this);
     }
 
