@@ -60,7 +60,7 @@ class Biome {
 
 const BiomeMobs = Object.freeze({
     CommonMobs: ["Pig", "Cow", "Sheep"],
-    Googlies: ["Zombie"],
+    Googlies: ["Zombie", "Creeper"],
 });
 
 const OverworldBiomes = Object.freeze({
