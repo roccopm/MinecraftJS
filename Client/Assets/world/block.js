@@ -252,10 +252,18 @@ function flowDownward(block, worldPos) {
     return below;
 }
 
-function setBlockType(block, type) {
+function setBlockType(block, type, updateAdjacent = true) {
     const chunk = getDimensionChunks(activeDimension).get(block.chunkX);
     if (!chunk) return;
-    chunk.setBlockType(block.x, block.y, type, block.wall, null, false, true);
+    chunk.setBlockType(
+        block.x,
+        block.y,
+        type,
+        block.wall,
+        null,
+        false,
+        updateAdjacent
+    );
 }
 
 function verticalCheckAbove(block, worldPos) {

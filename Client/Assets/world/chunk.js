@@ -693,6 +693,16 @@ class Chunk {
     getBlock(x, y, calculated = true, wall = false) {
         if (calculated) y = this.calculateY(y);
 
+        // Handle x out of bounds by getting from correct chunk
+        if (x < 0 || x >= this.width) {
+            const worldX = this.x + x * BLOCK_SIZE;
+            const targetChunk = this.getChunkForBlock(worldX);
+            if (!targetChunk) return null;
+
+            const localX = this.getLocalX(worldX, targetChunk);
+            return targetChunk.getBlock(localX, y, false, wall);
+        }
+
         if (!wall) {
             if (!this.blocks[y]) return null;
             if (!this.blocks[y][x]) return null;
