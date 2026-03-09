@@ -95,7 +95,13 @@
                     </div>
 
                     <div>
-                        <button class="btn" disabled>Edit</button>
+                        <button
+                            onclick="uploadWorld()"
+                            id="upload-world-btn"
+                            class="btn"
+                        >
+                            Upload
+                        </button>
                         <button
                             onclick="removeWorld()"
                             id="remove-world-btn"
@@ -103,7 +109,13 @@
                         >
                             Delete
                         </button>
-                        <button class="btn" disabled>Re-Create</button>
+                        <button
+                            onclick="downloadSelectedWorld()"
+                            id="download-world-btn"
+                            class="btn"
+                        >
+                            Download
+                        </button>
                         <button onclick="backToMenu()" id="" class="btn">Cancel</button>
                     </div>
                 </div>
@@ -128,7 +140,7 @@
                     </div>
                 </div>
 
-                <div class="small-text">Supports original Minecraft 1.8.9 texture packs!</div>
+                <!-- <div class="small-text">Supports original Minecraft 1.8.9 texture packs!</div> -->
                 <div class="world-buttons-container">
                     <button
                         onclick="uploadTexturePack()"

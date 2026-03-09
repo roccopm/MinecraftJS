@@ -18,6 +18,8 @@ const worldNameInput = document.querySelector("#world-name-input");
 
 const worldPlayButton = document.getElementById("play-selected-btn");
 const removeWorldButton = document.getElementById("remove-world-btn");
+const downloadWorldButton = document.getElementById("download-world-btn");
+const uploadWorldButton = document.getElementById("upload-world-btn");
 const footer = document.querySelector(".footer");
 const panorama = document.querySelector(".panorama");
 
@@ -540,6 +542,64 @@ function getSavedWorld(id) {
 }
 
 removeWorldButton.disabled = true;
+downloadWorldButton.disabled = true;
+
+function downloadSelectedWorld() {
+    if (!selectedWorld) return;
+    const saveData = localStorage.getItem(selectedWorld);
+    if (!saveData) return;
+    const worldMeta = getSavedWorld(selectedWorld);
+    const filename = worldMeta ? worldMeta.name : "world";
+    downloadWorldSave(saveData, filename);
+}
+
+function uploadWorld() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".save,application/json";
+
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const raw = event.target.result;
+            let saveData;
+            try {
+                saveData = JSON.parse(raw);
+            } catch (err) {
+                alert("Invalid save file: not valid JSON.");
+                return;
+            }
+            if (
+                !saveData ||
+                typeof saveData.seed === "undefined" ||
+                !Array.isArray(saveData.dimensions)
+            ) {
+                alert("Invalid save file: missing seed or dimensions.");
+                return;
+            }
+            const id = Date.now();
+            const baseName = file.name.replace(/\.save$/i, "") || "Uploaded World";
+            const name = prompt("World name:", baseName);
+            if (name === null) return;
+            const worldName = name.trim() || "Uploaded World";
+            const worldData = {
+                id,
+                name: worldName,
+                lastPlayed: new Date().toLocaleString(),
+            };
+            let worlds = JSON.parse(localStorage.getItem("worlds")) || [];
+            worlds.push(worldData);
+            localStorage.setItem("worlds", JSON.stringify(worlds));
+            localStorage.setItem(String(id), JSON.stringify(saveData));
+            populateWorlds();
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
 function removeWorld() {
     if (!selectedWorld) return;
     const worlds = JSON.parse(localStorage.getItem("worlds"));
@@ -553,6 +613,7 @@ function removeWorld() {
     );
 
     removeWorldButton.disabled = true;
+    downloadWorldButton.disabled = true;
     worldPlayButton.disabled = true;
     populateWorlds();
 }
@@ -620,6 +681,7 @@ function selectWorld(id, selectedElement) {
     selectedElement.classList.add("selected");
     worldPlayButton.disabled = false;
     removeWorldButton.disabled = false;
+    downloadWorldButton.disabled = false;
     selectedWorld = id;
 }
 
@@ -1176,6 +1238,7 @@ function showMenu() {
     // Button states
     worldPlayButton.disabled = true;
     removeWorldButton.disabled = true;
+    downloadWorldButton.disabled = true;
     removeServerButton.disabled = true;
     connectButton.disabled = true;
 }
@@ -1198,6 +1261,7 @@ function hideMenu() {
     // Button states
     worldPlayButton.disabled = true;
     removeWorldButton.disabled = true;
+    downloadWorldButton.disabled = true;
     removeServerButton.disabled = true;
     connectButton.disabled = true;
 }
