@@ -163,6 +163,16 @@
 
         <!-- Multiplayer menu -->
         <div class="world-select-container" id="server-select-container">
+            <style>
+                #server-download-btn {
+                    position: fixed;
+                    bottom: 2rem;
+                    left: 2rem;
+                    z-index: 10;
+                    width: 16rem;
+                }
+            </style>
+            <button id="server-download-btn" class="btn" onclick="downloadServer()">Download Server</button>
             <div class="world-select-container-text">
                 <div class="big-text">
                     Play Multiplayer
