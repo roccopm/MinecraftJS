@@ -139,6 +139,7 @@ function updateGame() {
     if (hotbar) hotbar.update();
     if (pauseMenu) pauseMenu.update();
     if (chat) chat.update();
+    if (typeof handleDebugInput === "function") handleDebugInput();
     camera.update(player);
     dayNightCycle();
 }

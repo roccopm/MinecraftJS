@@ -44,6 +44,9 @@ class PauseMenu {
         if (n < 1 || n > this.pages.length) return;
         this._page = n;
         this.page = n;
+        if (n === 2 && typeof updateDebugButtonLabels === "function") {
+            updateDebugButtonLabels();
+        }
     }
 
     getActive() {

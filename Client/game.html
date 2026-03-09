@@ -9,7 +9,6 @@
         <link rel="icon" href="Assets/sprites/misc/icon_16x16.png" />
     </head>
     <body oncontextmenu="return false;">
-        <h3 class="title">Minecraft JS</h3>
         <div class="chromium-issue-1092080-workaround__wrapper">
             <canvas id="canvas"></canvas>
             <div class="chromium-issue-1092080-workaround__overlay"></div>
@@ -54,36 +53,17 @@
                 <div class="pause-menu-page" data-page="2">
                     <h2 class="input-field-title pause-menu-title">Debug Menu</h2>
                     <button class="btn" onclick="pauseMenu.setPage(1)">Back</button>
-                    <button class="btn">Test Debug</button>
+                    <button class="btn" onclick="if(typeof SaveWorld==='function')SaveWorld()">Save World</button>
+                    <button class="btn" onclick="if(typeof SaveWorld==='function')SaveWorld(false, true)">Save World File</button>
+                    <button class="btn" id="debug-chunk-borders" onclick="toggleChunkBorders()">Chunk Borders</button>
+                    <button class="btn" id="debug-camera" onclick="toggleCamera()">Camera</button>
+                    <button class="btn" id="debug-hitbox" onclick="toggleHitbox()">Hitbox</button>
+                    <button class="btn" id="debug-print-block" onclick="togglePrintBlock()">Print Block</button>
+                    <button class="btn" id="debug-file-size" onclick="toggleFileSize()">File Size</button>
+                    <button class="btn" id="debug-fps" onclick="toggleFps()">FPS</button>
+                    <button class="btn" id="debug-coords" onclick="toggleCoordinates()">Coords</button>
                 </div>
             </div>
-        </div>
-
-        <div class="help-container">
-            <div class="help-text"></div>
-            <div class="help-text">Chat</div>
-            <div class="help-text">/ - Cheats</div>
-            <!-- <div class="help-text">/give (Blocks.[block] or Item.[item])</div> -->
-            <!-- <div class="help-text">/tp x y</div>
-            <div class="help-text">/clear</div>
-            <div class="help-text">/clearlog</div>
-            <div class="help-text">/gamemode</div> -->
-            <div class="help-text">/help</div>
-            <div class="help-text"></div>
-            <div class="help-text"></div>
-            <div class="help-text"><br /></div>
-            <div class="help-text">Debug</div>
-            <div class="help-text">O - Save World</div>
-            <div class="help-text">P - Save World File</div>
-            <div class="help-text">M - Print Block</div>
-            <div class="help-text">N - Camera</div>
-            <div class="help-text">F - File Size</div>
-            <div class="help-text">I - FPS</div>
-            <div class="help-text">B - Chunks</div>
-            <div class="help-text">C - Coords</div>
-            <div class="help-text">H - Hitbox</div>
-            <div class="help-text">T - Chat</div>
-            <div class="help-text"><br />Z - Close Panel</div>
         </div>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
