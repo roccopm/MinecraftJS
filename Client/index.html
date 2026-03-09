@@ -198,7 +198,7 @@
                     </div>
 
                     <div>
-                        <button class="btn">Edit</button>
+                        <!-- <button class="btn">Edit</button> -->
                         <button
                             onclick="removeServer()"
                             id="remove-server-btn"
@@ -207,8 +207,11 @@
                             Delete
                         </button>
                         <button
+                            onclick="forceRefreshServers()"
                             class="btn"
-                        >Refresh</button>
+                        >
+                            Refresh
+                        </button>
                         <button onclick="backToMenu()" class="btn">Cancel</button>
                     </div>
                 </div>

@@ -945,10 +945,6 @@ async function pingAndRenderServers() {
         }));
         renderServers(cachedServerStatuses);
     }
-
-    setTimeout(() => {
-        pingAndRenderServers();
-    }, 500);
 }
 
 function forceRefreshServers() {
