@@ -238,6 +238,19 @@ function playMusic(track) {
     });
 }
 
+function startMusicOnFirstInteraction() {
+    if (!currentSettings.music) return;
+    const start = () => {
+        playRandomMusic();
+        document.removeEventListener("click", start);
+        document.removeEventListener("keydown", start);
+        document.removeEventListener("touchstart", start);
+    };
+    document.addEventListener("click", start, { once: true });
+    document.addEventListener("keydown", start, { once: true });
+    document.addEventListener("touchstart", start, { once: true });
+}
+
 function parseDate(dateStr) {
     const ms = new Date(dateStr).getTime();
     return isNaN(ms) ? 0 : ms;
@@ -1274,9 +1287,7 @@ async function initialize() {
 
 initialize();
 
-setTimeout(() => {
-    playRandomMusic();
-}, 1000);
+startMusicOnFirstInteraction();
 
 removeTexturePackButton.addEventListener("click", removeTexturePack);
 worldPlayButton.disabled = true;
