@@ -212,7 +212,7 @@ function updateArray(array, deltaTime) {
 }
 
 function cursorBlockLogic() {
-    if (pauseMenu?.active) {
+    if (pauseMenu?.getActive()) {
         cursorInRange = false;
         if (player) {
             player.hoverBlock = null;
