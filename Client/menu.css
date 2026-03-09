@@ -203,6 +203,7 @@ body {
 .world-select-container {
     width: 100%;
     height: 80%;
+    background-color: #00000080;
 
     display: none;
     justify-content: center;
@@ -475,11 +476,11 @@ body {
 .btn {
     --btn-img: url("Assets/sprites/menu/menu_button.png");
     --btn-width: 200px; /* img horizontal resolution */
-    --btn-height: 40px; /* change this to set button scale; edge scales with it (4 @ 20px, 8 @ 40px) */
+    --btn-height: 48px; /* change this to set button scale */
     --btn-edge: calc(var(--btn-height) * 0.2);
     height: var(--btn-height);
     width: 100%;
-    max-width: 24rem;
+    max-width: 32rem;
     min-width: 60px;
     flex: 0 1 auto;
     box-sizing: border-box;
