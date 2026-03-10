@@ -134,7 +134,7 @@ class Hotbar {
         this.currentSlot = (this.currentSlot + 9) % 9;
 
         for (let i = 1; i < 10; i++) {
-            if (input.isKeyPressed(`Digit${i}`)) {
+            if (input.isActionPressed("hotbar" + i)) {
                 this.currentSlot = i - 1;
             }
         }

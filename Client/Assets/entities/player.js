@@ -796,7 +796,12 @@ class Player extends Entity {
 
     toggleLogic() {
         if (chat.inChat) return;
-        if (input.isKeyPressed("KeyE")) {
+        if (this.windowOpen && input.isActionPressed("pause")) {
+            this.closeInventory();
+            input._pauseConsumedByUI = true;
+            return;
+        }
+        if (input.isActionPressed("use")) {
             if (this.windowOpen) this.closeInventory();
             else {
                 if (this.gamemode === 1) {
@@ -929,7 +934,7 @@ class Player extends Entity {
     flyingToggleLogic() {
         if (!this.abilities.mayFly) return;
 
-        if (input.isKeyPressed("Space")) {
+        if (input.isActionPressed("jump")) {
             if (!this.pressedSpace) {
                 this.pressedSpace = true;
 
@@ -1258,7 +1263,7 @@ class Player extends Entity {
 
     dropLogic() {
         if (!this.canMove) return;
-        if (!input.isKeyPressed("KeyQ")) return;
+        if (!input.isActionPressed("drop")) return;
 
         if (this.windowOpen) {
             if (this.inventory.holdingItem) {
@@ -1284,7 +1289,7 @@ class Player extends Entity {
         )
             return;
 
-        if (input.isKeyDown("ShiftLeft")) {
+        if (input.isActionDown("sprint")) {
             this.drop(
                 this.getSelectedSlotItem(),
                 this.getSelectedSlotItem().count
@@ -1475,7 +1480,7 @@ class Player extends Entity {
         // Climbing logic
         if (!this.climbing) return;
 
-        if (input.isKeyDown("KeyW"))
+        if (input.isActionDown("moveUp"))
             this.velocity.y = (-this.abilities.walkSpeed / 2) * BLOCK_SIZE;
         else this.velocity.y = (this.abilities.walkSpeed / 4) * BLOCK_SIZE;
     }
@@ -1495,7 +1500,7 @@ class Player extends Entity {
     }
 
     handleHorizontalMovement() {
-        const isSprinting = input.isKeyDown("ShiftLeft");
+        const isSprinting = input.isActionDown("sprint");
         let speed = isSprinting
             ? this.abilities.walkSpeed * BLOCK_SIZE * 1.3
             : this.abilities.walkSpeed * BLOCK_SIZE;
@@ -1506,15 +1511,15 @@ class Player extends Entity {
         }
 
         // Return if no movement keys are pressed
-        if (!input.isKeyDown("KeyD") && !input.isKeyDown("KeyA")) return;
+        if (!input.isActionDown("moveRight") && !input.isActionDown("moveLeft")) return;
 
         // Move right or left based on key pressed
-        this.targetVelocity.x = input.isKeyDown("KeyD") ? speed : -speed;
+        this.targetVelocity.x = input.isActionDown("moveRight") ? speed : -speed;
     }
 
     handleJump() {
         if (this.swimming || !this.grounded) return; // Only jump if grounded and not swimming
-        if (!(input.isKeyDown("Space") || input.isKeyDown("KeyW"))) return;
+        if (!(input.isActionDown("jump") || input.isActionDown("moveUp"))) return;
 
         // Apply jump force
         this.velocity.y = -this.abilities.jumpForce * BLOCK_SIZE;
@@ -1540,7 +1545,7 @@ class Player extends Entity {
         // Swim upwards or sink slowly
 
         const isPressingUp =
-            input.isKeyDown("Space") || input.isKeyDown("KeyW");
+            input.isActionDown("jump") || input.isActionDown("moveUp");
 
         if (!this.grounded)
             this.velocity.y =
@@ -1557,7 +1562,7 @@ class Player extends Entity {
 
         this.isGettingKnockback = false;
 
-        const isSprinting = input.isKeyDown("ShiftLeft");
+        const isSprinting = input.isActionDown("sprint");
         let speed = isSprinting
             ? this.abilities.walkSpeed * 1.3 * BLOCK_SIZE
             : this.abilities.walkSpeed * BLOCK_SIZE;
@@ -1566,13 +1571,13 @@ class Player extends Entity {
 
         this.velocity.y = 0;
 
-        if (input.isKeyDown("KeyW") || input.isKeyDown("Space"))
+        if (input.isActionDown("moveUp") || input.isActionDown("jump"))
             this.velocity.y = -4.7 * BLOCK_SIZE;
-        else if (input.isKeyDown("KeyS")) this.velocity.y = 4.7 * BLOCK_SIZE;
+        else if (input.isActionDown("moveDown")) this.velocity.y = 4.7 * BLOCK_SIZE;
 
-        if (!input.isKeyDown("KeyD") && !input.isKeyDown("KeyA")) return;
+        if (!input.isActionDown("moveRight") && !input.isActionDown("moveLeft")) return;
 
-        this.targetVelocity.x = input.isKeyDown("KeyD")
+        this.targetVelocity.x = input.isActionDown("moveRight")
             ? speed * 2.52
             : -speed * 2.52;
     }

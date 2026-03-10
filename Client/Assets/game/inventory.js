@@ -1026,9 +1026,9 @@ class Inventory {
         // Only proceed if an item is hovered and the inventory UI is open
         if (!this.hoverItem || !player.windowOpen) return;
 
-        // Map number keys "Digit1" to "Digit9" to hotbar slots 0-8
+        // Map number keys to hotbar slots
         for (let i = 1; i <= 9; i++) {
-            if (input.isKeyPressed(`Digit${i}`)) {
+            if (input.isActionPressed("hotbar" + i)) {
                 const hotbarIndex = i - 1; // Convert to 0-based index (Digit1 -> slot 0, Digit2 -> slot 1, etc.)
                 this.assignToHotbarSlot(hotbarIndex);
                 break; // Exit loop after handling the first key press

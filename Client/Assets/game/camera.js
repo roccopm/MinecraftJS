@@ -41,7 +41,7 @@ class Camera {
 
     update(player) {
         if (!player) {
-            const calculatedSpeed = input.isKeyDown("ShiftLeft")
+            const calculatedSpeed = input.isActionDown("sprint")
                 ? this.speed * 2
                 : this.speed;
 

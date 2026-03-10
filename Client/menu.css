@@ -42,6 +42,58 @@ body {
     align-items: center;
 }
 
+/* Controls panel: constrain height so content can scroll */
+#controls-panel {
+    /* width: 48rem; */
+    max-height: 85vh;
+}
+
+.controls-list-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 55vh;
+    overflow-y: auto;
+    min-width: fit-content;
+    padding-right: 0.25rem;
+}
+
+.controls-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    gap: 1rem;
+}
+
+.controls-row-label {
+    width: 18rem;
+    min-width: 18rem;
+    text-align: left;
+}
+
+.controls-row-key {
+    width: 10rem;
+    min-width: 10rem;
+    text-align: left;
+}
+
+.controls-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* Fixed-size buttons (override .btn width) */
+.btn.controls-fixed-btn {
+    width: 10rem;
+    min-width: 10rem;
+    max-width: 10rem;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
 .full-width {
     width: 100%;
 }

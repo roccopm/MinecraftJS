@@ -348,25 +348,14 @@
                 <div class="world-create-top-container">
                     <div class="big-text">Options</div>
                 </div>
-                <div class="options-modal">
-                    <!-- <div class="button-grid">  -->
-                        <a class="btn" id="music-toggle-btn" onclick="toggleMusic()">Music - ON</a>
-                        <a class="btn" id="sfx-toggle-btn" onclick="toggleSFX()">SFX - ON</a>
-                        <a class="btn" id="lighting-toggle-btn" onclick="toggleLighting()">Lighting - ON</a>
-                        
-                        <a class="btn" onclick="showTexturePacks()">Texture Packs...</a>
-
-                        
-                        <button
-                        onclick="uploadSkin()"
-                        id="upload-skin-btn"
-                        class="btn"
-                        >
-                        Upload Skin
-                    </button>
-                    <button onclick="clearSkin()" class="btn">
-                        Clear Skin
-                    </button>
+                <div class="options-modal" id="options-main">
+                    <a class="btn" id="music-toggle-btn" onclick="toggleMusic()">Music - ON</a>
+                    <a class="btn" id="sfx-toggle-btn" onclick="toggleSFX()">SFX - ON</a>
+                    <a class="btn" id="lighting-toggle-btn" onclick="toggleLighting()">Lighting - ON</a>
+                    <a class="btn" onclick="showTexturePacks()">Texture Packs...</a>
+                    <a class="btn" id="controls-btn" onclick="gotoControls()">Controls...</a>
+                    <button type="button" class="btn" onclick="uploadSkin()" id="upload-skin-btn">Upload Skin</button>
+                    <button type="button" class="btn" onclick="clearSkin()">Clear Skin</button>
                     <div class="input-field-container">
                         <div class="input-field-title">Username</div>
                         <input
@@ -381,14 +370,25 @@
                             Will be used for multiplayer
                         </div>
                     </div>
-                    <!-- </div> -->
-
                     <div class="button-space"></div>
-
                     <a onclick="backToMenu(), saveSettings()" class="btn">Done</a>
+                </div>
+
+                <!-- Controls -->
+                <div class="options-modal" id="controls-panel" style="display: none;">
+                    <div class="big-text" style="margin-bottom: 1rem;">Controls</div>
+                    <div class="controls-list-scroll">
+                        <div id="controls-list"></div>
+                    </div>
+                    <div class="controls-buttons">
+                        <button type="button" class="btn" onclick="resetControlsToDefault()">Reset to default</button>
+                        <a class="btn" onclick="gotoOptions()">Back</a>
+                    </div>
                 </div>
             </div>
     </body>
 
+    <script src="Assets/utils/keyBindings.js"></script>
+    <script src="buttonUtils.js"></script>
     <script src="menu.js"></script>
 </html>

@@ -1,12 +1,19 @@
 class InputHandler {
-    constructor(keys) {
+    constructor(keyBindings) {
+        this.keyBindings = keyBindings;
+        const keysFromBindings = new Set();
+        for (const keys of Object.values(keyBindings)) {
+            for (const k of keys) keysFromBindings.add(k);
+        }
+
         this.keys = {}; // Tracks whether a key is held down
         this.keysDown = {}; // Tracks single press events
-        keys.forEach((key) => {
+        this._pauseConsumedByUI = false;
+        keysFromBindings.forEach((key) => {
             this.keys[key] = false;
             this.keysDown[key] = false;
         });
-        this.shiftPressed = false; // Tracks if Shift is pressed
+
         this.mouse = {
             leftMouseDown: false,
             rightMouseDown: false,
@@ -17,6 +24,10 @@ class InputHandler {
         };
         this.scroll = { deltaX: 0, deltaY: 0 }; // Store scroll delta
         this._initializeEventListeners();
+    }
+
+    get shiftPressed() {
+        return !!(this.keys["ShiftLeft"] || this.keys["ShiftRight"]);
     }
 
     _initializeEventListeners() {
@@ -39,13 +50,16 @@ class InputHandler {
     }
 
     _handleKeyDown(event) {
+        if (typeof chat !== "undefined" && chat.inChat) return;
         const key = event.code;
-
-        // Check for Shift specifically
-        if (key === "ShiftLeft" || key === "ShiftRight") {
-            this.shiftPressed = true;
+        if (typeof pauseMenu !== "undefined" && pauseMenu.getActive()) {
+            const pauseKeys = this.keyBindings.pause;
+            if (!pauseKeys || !pauseKeys.includes(key)) return;
         }
-
+        if (!(key in this.keys)) {
+            this.keys[key] = false;
+            this.keysDown[key] = false;
+        }
         if (key in this.keys) {
             event.preventDefault(); // Prevent default action for all keys
 
@@ -53,20 +67,27 @@ class InputHandler {
                 this.keysDown[key] = true; // Set keysDown only on the first keydown
             }
             this.keys[key] = true; // Keep keys set to true as long as the key is held down
+            if (typeof chat !== "undefined" && !chat.inChat) {
+                if (this.keyBindings.chatOpen && this.keyBindings.chatOpen.includes(key)) {
+                    chat.openChat();
+                } else if (this.keyBindings.chatCommand && this.keyBindings.chatCommand.includes(key)) {
+                    chat.currentMessage = "/";
+                    chat.cursorPosition = 1;
+                    chat.openChat();
+                }
+            }
         }
     }
 
     _handleKeyUp(event) {
         const key = event.code;
-
-        // Check for Shift specifically
-        if (key === "ShiftLeft" || key === "ShiftRight") {
-            this.shiftPressed = false;
+        if (!(key in this.keys)) {
+            this.keys[key] = false;
+            this.keysDown[key] = false;
         }
-
         if (key in this.keys) {
-            this.keys[key] = false; // Reset key state
-            this.keysDown[key] = false; // Clear single press event
+            this.keys[key] = false;
+            this.keysDown[key] = false;
         }
     }
 
@@ -108,6 +129,21 @@ class InputHandler {
         this.scroll.deltaY = event.deltaY;
     }
 
+    isActionDown(action) {
+        if (action === "attack") return this.mouse.leftMouseDown;
+        if (action === "place") return this.mouse.rightMouseDown;
+        const keys = this.keyBindings[action];
+        if (!keys) return false;
+        return keys.some((k) => this.keys[k]);
+    }
+    isActionPressed(action) {
+        if (action === "attack") return this.isLeftMouseButtonPressed();
+        if (action === "place") return this.isRightMouseButtonPressed();
+        const keys = this.keyBindings[action];
+        if (!keys) return false;
+        return keys.some((k) => this.keysDown[k]);
+    }
+
     // Getters for key state
     isKeyDown(keyCode) {
         return this.keys[keyCode] || false; // True as long as the key is held down
@@ -115,6 +151,10 @@ class InputHandler {
 
     isKeyPressed(keyCode) {
         return this.keysDown[keyCode] || false;
+    }
+
+    getChatTypingKeys() {
+        return Object.keys(this.keys);
     }
 
     resetKeysPressed() {
@@ -191,66 +231,5 @@ class InputHandler {
     }
 }
 
-// Define the keys you want to track
-const trackedKeys = [
-    "KeyA",
-    "KeyB",
-    "KeyC",
-    "KeyD",
-    "KeyE",
-    "KeyF",
-    "KeyG",
-    "KeyH",
-    "KeyI",
-    "KeyJ",
-    "KeyK",
-    "KeyL",
-    "KeyM",
-    "KeyN",
-    "KeyO",
-    "KeyP",
-    "KeyQ",
-    "KeyR",
-    "KeyS",
-    "KeyT",
-    "KeyU",
-    "KeyV",
-    "KeyW",
-    "KeyX",
-    "KeyY",
-    "KeyZ",
-    "Digit0",
-    "Digit1",
-    "Digit2",
-    "Digit3",
-    "Digit4",
-    "Digit5",
-    "Digit6",
-    "Digit7",
-    "Digit8",
-    "Digit9",
-    "Space",
-    "ArrowUp",
-    "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
-    "Escape",
-    "Enter",
-    "ShiftLeft",
-    "ShiftRight",
-    "ControlLeft",
-    "ControlRight",
-    "AltLeft",
-    "AltRight",
-    "Tab",
-    "Backspace",
-    "Minus",
-    "Equal",
-    "Backquote",
-    "Slash",
-    "Backslash",
-    "Period",
-];
-
-// Create an instance of the InputHandler with the keys you want to track
-const input = new InputHandler(trackedKeys);
+const keyBindings = loadKeyBindings();
+const input = new InputHandler(keyBindings);
