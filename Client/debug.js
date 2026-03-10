@@ -1,5 +1,3 @@
-const panel = document.querySelector(".help-container");
-
 setInterval(() => {
     updateDebug();
 }, 1000 / 144);

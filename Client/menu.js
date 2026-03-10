@@ -1,5 +1,3 @@
-// window.location.href = "game.html";
-
 const randomTextElement = document.querySelector(".splash");
 const menuContainer = document.querySelector(".menu-container");
 const worldsContainer = document.querySelector(".world-select");
@@ -20,6 +18,8 @@ const worldNameInput = document.querySelector("#world-name-input");
 
 const worldPlayButton = document.getElementById("play-selected-btn");
 const removeWorldButton = document.getElementById("remove-world-btn");
+const downloadWorldButton = document.getElementById("download-world-btn");
+const uploadWorldButton = document.getElementById("upload-world-btn");
 const footer = document.querySelector(".footer");
 const panorama = document.querySelector(".panorama");
 
@@ -116,17 +116,7 @@ const musicTracks = [
     "Moog City 2",
 ];
 
-function buttonSound() {
-    if (!currentSettings.sfx) return;
-
-    const audio = new Audio("Assets/audio/sfx/ui/click.ogg");
-    audio.volume = 0.3;
-    audio.play();
-}
-
 function multiplayerButton() {
-    buttonSound();
-
     hideMenu();
 
     showServers();
@@ -144,8 +134,6 @@ function downloadServer() {
 }
 
 function toggleSFX() {
-    buttonSound();
-
     currentSettings.sfx = !currentSettings.sfx;
 
     sfxToggleButton.textContent =
@@ -153,8 +141,6 @@ function toggleSFX() {
 }
 
 function toggleMusic() {
-    buttonSound();
-
     currentSettings.music = !currentSettings.music;
 
     if (!currentSettings.music) {
@@ -174,8 +160,6 @@ function toggleMusic() {
 }
 
 function toggleLighting() {
-    buttonSound();
-
     currentSettings.lighting = !currentSettings.lighting;
 
     lightingToggleButton.textContent =
@@ -219,8 +203,6 @@ function loadSettings() {
 loadSettings();
 
 function showTexturePacks() {
-    buttonSound();
-
     hideMenu();
 
     texturePackSelectContainer.style.display = "flex";
@@ -232,9 +214,7 @@ function showTexturePacks() {
 }
 
 function playGame() {
-    buttonSound();
     menuContainer.style.display = "none";
-    panorama.style.display = "none";
     worldSelectContainer.style.display = "flex";
     footer.style.display = "none";
     populateWorlds();
@@ -261,11 +241,22 @@ function playMusic(track) {
     });
 }
 
+function startMusicOnFirstInteraction() {
+    if (!currentSettings.music) return;
+    const start = () => {
+        playRandomMusic();
+        document.removeEventListener("click", start);
+        document.removeEventListener("keydown", start);
+        document.removeEventListener("touchstart", start);
+    };
+    document.addEventListener("click", start, { once: true });
+    document.addEventListener("keydown", start, { once: true });
+    document.addEventListener("touchstart", start, { once: true });
+}
+
 function parseDate(dateStr) {
-    const [datePart, timePart] = dateStr.split(", ");
-    const [day, month, year] = datePart.split("-").map(Number);
-    const [hour, minute, second] = timePart.split(":").map(Number);
-    return new Date(year, month - 1, day, hour, minute, second);
+    const ms = new Date(dateStr).getTime();
+    return isNaN(ms) ? 0 : ms;
 }
 
 function populateWorlds() {
@@ -290,7 +281,7 @@ function populateWorlds() {
 
             worldNameElement.textContent = world.name;
             worldDateElement.textContent =
-                world.lastPlayed + ` - ${worldSize}KB`;
+                new Date(world.lastPlayed).toLocaleString() + ` - ${worldSize}KB`;
             worldElement.style.display = "flex";
 
             worldElement.addEventListener("click", () => {
@@ -415,14 +406,14 @@ function uploadTexturePack() {
                 ldb.set(`texturePack_${packId}`, texturePackData);
 
                 try {
-                    const base64Data = texturePackData.startsWith(
-                        "data:application/x-zip-compressed;`base64`,"
-                    )
-                        ? texturePackData.replace(
-                              "data:application/x-zip-compressed;base64,",
-                              ""
-                          )
-                        : texturePackData;
+                    const base64Data =
+                        typeof texturePackData === "string" &&
+                        texturePackData.startsWith("data:") &&
+                        texturePackData.includes(",")
+                            ? texturePackData.slice(
+                                  texturePackData.indexOf(",") + 1
+                              )
+                            : texturePackData;
                     const zip = await JSZip.loadAsync(base64Data, {
                         base64: true,
                     });
@@ -538,10 +529,8 @@ async function getTexturePackData(id) {
 }
 
 function gotoWorldCreate() {
-    buttonSound();
     worldCreateContainer.style.display = "flex";
     menuContainer.style.display = "none";
-    panorama.style.display = "none";
     worldSelectContainer.style.display = "none";
     footer.style.display = "none";
 }
@@ -569,6 +558,64 @@ function getSavedWorld(id) {
 }
 
 removeWorldButton.disabled = true;
+downloadWorldButton.disabled = true;
+
+function downloadSelectedWorld() {
+    if (!selectedWorld) return;
+    const saveData = localStorage.getItem(selectedWorld);
+    if (!saveData) return;
+    const worldMeta = getSavedWorld(selectedWorld);
+    const filename = worldMeta ? worldMeta.name : "world";
+    downloadWorldSave(saveData, filename);
+}
+
+function uploadWorld() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".save,application/json";
+
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const raw = event.target.result;
+            let saveData;
+            try {
+                saveData = JSON.parse(raw);
+            } catch (err) {
+                alert("Invalid save file: not valid JSON.");
+                return;
+            }
+            if (
+                !saveData ||
+                typeof saveData.seed === "undefined" ||
+                !Array.isArray(saveData.dimensions)
+            ) {
+                alert("Invalid save file: missing seed or dimensions.");
+                return;
+            }
+            const id = Date.now();
+            const baseName = file.name.replace(/\.save$/i, "") || "Uploaded World";
+            const name = prompt("World name:", baseName);
+            if (name === null) return;
+            const worldName = name.trim() || "Uploaded World";
+            const worldData = {
+                id,
+                name: worldName,
+                lastPlayed: new Date().toLocaleString(),
+            };
+            let worlds = JSON.parse(localStorage.getItem("worlds")) || [];
+            worlds.push(worldData);
+            localStorage.setItem("worlds", JSON.stringify(worlds));
+            localStorage.setItem(String(id), JSON.stringify(saveData));
+            populateWorlds();
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
 function removeWorld() {
     if (!selectedWorld) return;
     const worlds = JSON.parse(localStorage.getItem("worlds"));
@@ -582,24 +629,22 @@ function removeWorld() {
     );
 
     removeWorldButton.disabled = true;
+    downloadWorldButton.disabled = true;
     worldPlayButton.disabled = true;
     populateWorlds();
 }
 
 function backToMenu() {
-    buttonSound();
     showMenu();
 }
 
 function backToWorldSelection() {
-    buttonSound();
     worldCreateContainer.style.display = "none";
     worldSelectContainer.style.display = "flex";
 }
 
 let selectedGameMode = 0;
 function switchGameMode() {
-    buttonSound();
     selectedGameMode = (selectedGameMode + 1) % 4;
     setGameMode(selectedGameMode);
 }
@@ -638,7 +683,6 @@ function playSelectedWorld() {
         })
     );
 
-    buttonSound();
     setInterval(() => {
         window.location.href = "game.html";
     }, 500);
@@ -653,6 +697,7 @@ function selectWorld(id, selectedElement) {
     selectedElement.classList.add("selected");
     worldPlayButton.disabled = false;
     removeWorldButton.disabled = false;
+    downloadWorldButton.disabled = false;
     selectedWorld = id;
 }
 
@@ -916,10 +961,6 @@ async function pingAndRenderServers() {
         }));
         renderServers(cachedServerStatuses);
     }
-
-    setTimeout(() => {
-        pingAndRenderServers();
-    }, 500);
 }
 
 function forceRefreshServers() {
@@ -1055,7 +1096,6 @@ function selectServer(id, selectedElement) {
 }
 
 function gotoAddServer() {
-    buttonSound();
     serverSelectContainer.style.display = "none";
     addServerContainer.style.display = "flex";
     tempServerName = "New Server";
@@ -1123,7 +1163,6 @@ function removeServer() {
 }
 
 function gotoQuickConnect() {
-    buttonSound();
     serverSelectContainer.style.display = "none";
     quickConnectContainer.style.display = "flex";
     tempQuickConnectIP = "";
@@ -1161,21 +1200,18 @@ function connectToServer() {
     localStorage.setItem("multiplayerIP", ip);
     localStorage.setItem("multiplayerPort", port);
 
-    buttonSound();
     setTimeout(() => {
         window.location.href = "game.html?multiplayer=true";
     }, 500);
 }
 
 function cancelQuickConnect() {
-    buttonSound();
     quickConnectContainer.style.display = "none";
     serverSelectContainer.style.display = "flex";
     displayServers();
 }
 
 function backToServerSelection() {
-    buttonSound();
     addServerContainer.style.display = "none";
     serverSelectContainer.style.display = "flex";
 
@@ -1187,8 +1223,6 @@ function backToServerSelection() {
 }
 
 function gotoOptions() {
-    buttonSound();
-
     hideMenu();
 
     optionsContainer.style.display = "flex";
@@ -1289,13 +1323,13 @@ function showMenu() {
     // Button states
     worldPlayButton.disabled = true;
     removeWorldButton.disabled = true;
+    downloadWorldButton.disabled = true;
     removeServerButton.disabled = true;
     connectButton.disabled = true;
 }
 
 function hideMenu() {
     menuContainer.style.display = "none";
-    panorama.style.display = "none";
     worldSelectContainer.style.display = "none";
     footer.style.display = "none";
     texturePackSelectContainer.style.display = "none";
@@ -1312,6 +1346,7 @@ function hideMenu() {
     // Button states
     worldPlayButton.disabled = true;
     removeWorldButton.disabled = true;
+    downloadWorldButton.disabled = true;
     removeServerButton.disabled = true;
     connectButton.disabled = true;
 }
@@ -1328,9 +1363,7 @@ async function initialize() {
 
 initialize();
 
-setTimeout(() => {
-    playRandomMusic();
-}, 1000);
+startMusicOnFirstInteraction();
 
 removeTexturePackButton.addEventListener("click", removeTexturePack);
 worldPlayButton.disabled = true;
