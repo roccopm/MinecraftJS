@@ -973,20 +973,20 @@ class Player extends Entity {
     }
 
     checkForEntityOnMouse() {
-        const mouseWorld = input.getMouseWorldPosition();
-        const mx = mouseWorld.x;
-        const my = mouseWorld.y;
-        return this.entities.find((entity) => {
-            if (entity.dimension !== activeDimension) return false;
-            const ex = entity.position.x + (entity.offset?.x ?? 0);
-            const ey = entity.position.y + (entity.offset?.y ?? 0);
-            return (
-                mx >= ex &&
-                mx <= ex + entity.hitbox.x &&
-                my >= ey &&
-                my <= ey + entity.hitbox.y
-            );
-        }) ?? null;
+        return (
+            this.entities.find((entity) => {
+                if (entity.dimension !== activeDimension) return false;
+                const worldX = entity.position.x + (entity.offset?.x ?? 0);
+                const worldY = entity.position.y + (entity.offset?.y ?? 0);
+                return mouseOverPosition(
+                    worldX,
+                    worldY,
+                    entity.hitbox.x,
+                    entity.hitbox.y,
+                    true
+                );
+            }) ?? null
+        );
     }
 
     tryHit() {
