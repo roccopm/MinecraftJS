@@ -77,6 +77,10 @@ function SaveWorld(message = true, toFile = false) {
         currentSave.inventoryItems = JSON.stringify(playerInventory);
         currentSave.gamemode = player.gamemode;
         currentSave.health = player.health;
+        currentSave.foodLevel = player.foodLevel;
+        currentSave.foodSaturationLevel = player.foodSaturationLevel;
+        currentSave.foodExhaustionLevel = player.foodExhaustionLevel;
+        currentSave.foodTickTimer = player.foodTickTimer;
         currentSave.currentSlot = hotbar.currentSlot;
         currentSave.activeDimension = activeDimension;
         currentSave.flying = player.abilities.flying;
@@ -329,12 +333,27 @@ async function LoadWorld(save) {
                 }
             }
 
-            if (currentSave.currentSlot)
+            if (currentSave.currentSlot !== undefined)
                 hotbar.currentSlot = currentSave.currentSlot;
 
             player.setGamemode(currentSave.gamemode);
 
-            if (currentSave.health) player.health = currentSave.health;
+            if (currentSave.health !== undefined)
+                player.health = currentSave.health;
+
+            if (currentSave.foodLevel !== undefined)
+                player.foodLevel = currentSave.foodLevel;
+
+            if (currentSave.foodSaturationLevel !== undefined)
+                player.foodSaturationLevel = currentSave.foodSaturationLevel;
+
+            if (currentSave.foodExhaustionLevel !== undefined)
+                player.foodExhaustionLevel = currentSave.foodExhaustionLevel;
+
+            if (currentSave.foodTickTimer !== undefined)
+                player.foodTickTimer = currentSave.foodTickTimer;
+
+            player.clampFoodStats();
 
             if (currentSave.flying) player.abilities.flying = true;
 
