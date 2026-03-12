@@ -19,6 +19,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
+        working-directory: ./Client
         run: npm ci
 
       - name: Deploy client folder to itch.io
