@@ -14,7 +14,8 @@ function createExplosion(
         damage = 15,
         power = 20,
         excludeEntity = null,
-    } = {}
+        destroyTerrain = true,
+    } = {},
 ) {
     PlayRandomSoundFromArray({
         array: Sounds.Explosion,
@@ -30,10 +31,7 @@ function createExplosion(
         if (distance > radius) continue;
 
         const damageFactor = 1 - distance / radius;
-        const appliedDamage = Math.max(
-            0,
-            Math.round(damage * damageFactor)
-        );
+        const appliedDamage = Math.max(0, Math.round(damage * damageFactor));
         if (typeof entity.hit === "function") entity.hit(appliedDamage);
 
         if (entity.type === EntityTypes.Drop) {
@@ -44,10 +42,12 @@ function createExplosion(
         const knockbackFactor = (1 - distance / radius) / 5;
         const knockbackForce = Math.max(
             0,
-            power * BLOCK_SIZE * knockbackFactor
+            power * BLOCK_SIZE * knockbackFactor,
         );
         entity.knockBack(position.x, knockbackForce);
     }
+
+    if (!destroyTerrain) return;
 
     // Destroy blocks in radius (flood-fill with power decay)
     const startX = Math.floor(position.x / BLOCK_SIZE);
@@ -61,7 +61,7 @@ function createExplosion(
         const worldX = x * BLOCK_SIZE;
         const worldY = y * BLOCK_SIZE;
         const distance = Math.sqrt(
-            Math.pow(worldX - position.x, 2) + Math.pow(worldY - position.y, 2)
+            Math.pow(worldX - position.x, 2) + Math.pow(worldY - position.y, 2),
         );
 
         if (distance > radius || remainingPower <= 0) continue;

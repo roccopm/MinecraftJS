@@ -56,6 +56,7 @@ let GAMERULES = {
     doMobLoot: true,
     doTileDrops: true,
     doFireTick: true,
+    doMobGriefing: true,
 };
 
 const ToolType = Object.freeze({

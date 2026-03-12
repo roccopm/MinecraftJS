@@ -84,6 +84,7 @@ class Creeper extends Mob {
             damage: 12,
             power: 12,
             excludeEntity: this,
+            destroyTerrain: GAMERULES.doMobGriefing,
         });
     }
 
