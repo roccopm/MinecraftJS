@@ -1283,10 +1283,21 @@ function startRebind(action) {
         }
         const key = e.code;
         if (!key) return;
+
         waitingForRebindAction = null;
+        document.removeEventListener("keydown", handler);
+
+        if (key === "ControlLeft" || key === "ControlRight") {
+            const proceed = confirm("Ctrl is not recommended as a binding because we can't prevent browser shortcuts (such as Ctrl+W to close the tab) from taking place.\n\nDo you want to use Ctrl anyway?");
+
+            document.removeEventListener("keydown", handler);
+            if (!proceed) {
+                renderControlsList();
+                return;
+            }
+        }
         controlsBindings[action] = [key];
         saveKeyBindings(controlsBindings);
-        document.removeEventListener("keydown", handler);
         renderControlsList();
     };
     document.addEventListener("keydown", handler, { once: true });
