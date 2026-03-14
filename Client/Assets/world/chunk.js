@@ -574,6 +574,11 @@ class Chunk {
                 if (y > height) continue;
 
                 this.setBlockType(x, y, block);
+
+                // if (block === Blocks.Lava)
+                //     chat.message(
+                //         `Generated ore ${GetBlock(block).name} at (${x}, ${y}) in chunk at x=${this.x} in dimension ${this.dimension}`,
+                //     );
             }
         }
     }
@@ -1143,9 +1148,7 @@ class Chunk {
                             console.log(
                                 `Invalid frame: Right block at (${
                                     startX + innerWidthPx + BLOCK_SIZE
-                                }, ${wy}) is ${
-                                    rightBlock.blockType
-                                }, expected Obsidian`,
+                                }, ${wy}) is ${rightBlock.blockType}, expected Obsidian`,
                             );
                             isValidFrame = false;
                             break;

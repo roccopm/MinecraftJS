@@ -1454,13 +1454,18 @@ class Block extends Square {
     }
 
     simulateWaterFlow() {
+        // Don't simulate fluid blocks that belong to an inactive dimension.
+        // Without this guard, nether lava in updatingBlocks would call
+        // GetBlockAtWorldPosition(activeDimension) and overwrite overworld blocks.
+        if (this.dimensionIndex !== activeDimension) return;
+
         if (getDimension(activeDimension).fastLava) {
             blockMap.get(Blocks.Lava).updateSpeed = 0.15;
         } else {
             blockMap.get(Blocks.Lava).updateSpeed = 0.05;
         }
 
-        // Only process if this block is water.
+        // Only process if this block is fluid.
         if (!GetBlock(this.blockType).fluid) return;
 
         // Initialize water properties if undefined.

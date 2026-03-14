@@ -396,6 +396,15 @@ async function LoadChunk(
 
     constructedChunk.generateArray();
 
+    constructedChunk.dimension = dimensionIndex;
+
+    for (let by = 0; by < CHUNK_HEIGHT; by++) {
+        for (let bx = 0; bx < CHUNK_WIDTH; bx++) {
+            constructedChunk.blocks[by][bx].dimensionIndex = dimensionIndex;
+            constructedChunk.walls[by][bx].dimensionIndex = dimensionIndex;
+        }
+    }
+
     // First pass: Set block types without handling extended blocks
     for (let y = 0; y < CHUNK_HEIGHT; y++) {
         for (let x = 0; x < CHUNK_WIDTH; x++) {

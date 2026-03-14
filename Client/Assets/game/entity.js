@@ -666,10 +666,8 @@ class Entity {
 
         this.handleTargetVelocity(stepDeltaTime);
 
-        const nextPositionX =
-            this.position.x + this.velocity.x * stepDeltaTime;
-        const nextPositionY =
-            this.position.y + this.velocity.y * stepDeltaTime;
+        const nextPositionX = this.position.x + this.velocity.x * stepDeltaTime;
+        const nextPositionY = this.position.y + this.velocity.y * stepDeltaTime;
 
         this.applyDrag(stepDeltaTime);
         this.clampHorizontalVelocity();
@@ -819,8 +817,7 @@ class Entity {
         this.calculateForce();
 
         if (!this.grounded && !this.swimming)
-            this.fallDistance +=
-                (this.velocity.y / BLOCK_SIZE) * stepDeltaTime;
+            this.fallDistance += (this.velocity.y / BLOCK_SIZE) * stepDeltaTime;
         else this.fallDistance = 0;
 
         if (!leftCollision && !rightCollision) {
