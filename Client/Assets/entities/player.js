@@ -176,10 +176,10 @@ class Player extends Entity {
         if (this.abilities.flying) return;
 
         const isMovingHorizontally =
-            (input.isKeyDown("KeyA") || input.isKeyDown("KeyD")) &&
+            (input.isActionDown("moveLeft") || input.isActionDown("moveRight")) &&
             this.velocity.x !== 0;
         const isPressingUp =
-            (input.isKeyDown("Space") || input.isKeyDown("KeyW")) &&
+            (input.isActionDown("jump") || input.isActionDown("moveUp")) &&
             this.velocity.y !== 0;
 
         if (this.swimming && (isMovingHorizontally || isPressingUp)) {
@@ -188,7 +188,7 @@ class Player extends Entity {
         }
 
         if (this.grounded && isMovingHorizontally) {
-            this.addFoodExhaustion(input.isKeyDown("ShiftLeft") ? 0.03 : 0.01);
+            this.addFoodExhaustion(input.isActionDown("sprint") ? 0.03 : 0.01);
         }
     }
 
@@ -1670,7 +1670,7 @@ class Player extends Entity {
         this.velocity.y = -this.abilities.jumpForce * BLOCK_SIZE;
         this.grounded = false;
 
-        this.addFoodExhaustion(input.isKeyDown("ShiftLeft") ? 0.6 : 0.4);
+        this.addFoodExhaustion(input.isActionDown("sprint") ? 0.6 : 0.4);
     }
 
     handleSwimming() {

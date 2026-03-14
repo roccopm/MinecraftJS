@@ -67,7 +67,7 @@ function toggleCoordinates() {
 }
 
 function PrintBlockLogic() {
-    if (input.isLeftMouseDown() || input.isRightMouseDown()) {
+    if (input.isActionDown("attack") || input.isActionDown("place")) {
         const mousePos = input.getMousePositionOnBlockGrid();
         const block = GetBlockAtWorldPosition(mousePos.x, mousePos.y);
 
