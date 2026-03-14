@@ -54,7 +54,7 @@ class PauseMenu {
     }
 
     update() {
-        if (!input.isKeyPressed("Escape")) return;
+        if (!input.isActionPressed("pause")) return;
 
         if (this.getActive()) {
             if (this._page > 1) {
@@ -66,6 +66,10 @@ class PauseMenu {
         }
 
         if (chat.inChat || (player && player.windowOpen)) return;
+        if (input._pauseConsumedByUI) {
+            input._pauseConsumedByUI = false;
+            return;
+        }
 
         if (player && !loadingWorld) {
             this.open();

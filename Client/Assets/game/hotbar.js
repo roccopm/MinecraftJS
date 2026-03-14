@@ -195,18 +195,16 @@ class Hotbar {
     }
 
     handleSelecting() {
-        const scrollDelta = input.getScrollDelta();
-
         if (chat.inChat) return;
         if (player.windowOpen) return;
 
-        if (scrollDelta.deltaY < 0) this.currentSlot--;
-        if (scrollDelta.deltaY > 0) this.currentSlot++;
+        if (input.isActionPressed("hotbarUp")) this.currentSlot--;
+        if (input.isActionPressed("hotbarDown")) this.currentSlot++;
 
         this.currentSlot = (this.currentSlot + 9) % 9;
 
         for (let i = 1; i < 10; i++) {
-            if (input.isKeyPressed(`Digit${i}`)) {
+            if (input.isActionPressed("hotbar" + i)) {
                 this.currentSlot = i - 1;
             }
         }

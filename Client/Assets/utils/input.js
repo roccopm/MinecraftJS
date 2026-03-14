@@ -1,22 +1,30 @@
 class InputHandler {
-    constructor(keys) {
+    constructor(keyBindings) {
+        this.keyBindings = keyBindings;
+        const keysFromBindings = new Set();
+        for (const keys of Object.values(keyBindings)) {
+            for (const k of keys) keysFromBindings.add(k);
+        }
+
         this.keys = {}; // Tracks whether a key is held down
         this.keysDown = {}; // Tracks single press events
-        keys.forEach((key) => {
+        this._pauseConsumedByUI = false;
+        keysFromBindings.forEach((key) => {
             this.keys[key] = false;
             this.keysDown[key] = false;
         });
-        this.shiftPressed = false; // Tracks if Shift is pressed
+
         this.mouse = {
-            leftMouseDown: false,
-            rightMouseDown: false,
-            leftMouseClicked: false, // Single-click tracking for left button
-            rightMouseClicked: false, // Single-click tracking for right button
-            wheelDown: false,
+            buttons: [false, false, false], // [left, middle, right] down state
+            clicked: [false, false, false], // [left, middle, right] single-press (consumed when read)
             position: { x: 0, y: 0 },
         };
         this.scroll = { deltaX: 0, deltaY: 0 }; // Store scroll delta
         this._initializeEventListeners();
+    }
+
+    get shiftPressed() {
+        return !!(this.keys["ShiftLeft"] || this.keys["ShiftRight"]);
     }
 
     _initializeEventListeners() {
@@ -39,13 +47,16 @@ class InputHandler {
     }
 
     _handleKeyDown(event) {
+        if (typeof chat !== "undefined" && chat.inChat) return;
         const key = event.code;
-
-        // Check for Shift specifically
-        if (key === "ShiftLeft" || key === "ShiftRight") {
-            this.shiftPressed = true;
+        if (typeof pauseMenu !== "undefined" && pauseMenu.getActive()) {
+            const pauseKeys = this.keyBindings.pause;
+            if (!pauseKeys || !pauseKeys.includes(key)) return;
         }
-
+        if (!(key in this.keys)) {
+            this.keys[key] = false;
+            this.keysDown[key] = false;
+        }
         if (key in this.keys) {
             event.preventDefault(); // Prevent default action for all keys
 
@@ -53,48 +64,43 @@ class InputHandler {
                 this.keysDown[key] = true; // Set keysDown only on the first keydown
             }
             this.keys[key] = true; // Keep keys set to true as long as the key is held down
+            if (typeof chat !== "undefined" && !chat.inChat) {
+                if (this.keyBindings.chatOpen && this.keyBindings.chatOpen.includes(key)) {
+                    chat.openChat();
+                } else if (this.keyBindings.chatCommand && this.keyBindings.chatCommand.includes(key)) {
+                    chat.currentMessage = "/";
+                    chat.cursorPosition = 1;
+                    chat.openChat();
+                }
+            }
         }
     }
 
     _handleKeyUp(event) {
         const key = event.code;
-
-        // Check for Shift specifically
-        if (key === "ShiftLeft" || key === "ShiftRight") {
-            this.shiftPressed = false;
+        if (!(key in this.keys)) {
+            this.keys[key] = false;
+            this.keysDown[key] = false;
         }
-
         if (key in this.keys) {
-            this.keys[key] = false; // Reset key state
-            this.keysDown[key] = false; // Clear single press event
+            this.keys[key] = false;
+            this.keysDown[key] = false;
         }
     }
 
     _handleMouseDown(event) {
-        if (event.button === 0) {
-            if (!this.mouse.leftMouseDown) {
-                this.mouse.leftMouseClicked = true; // Set left mouse clicked only on the first press
+        if (event.button >= 0 && event.button <= 2) {
+            if (!this.mouse.buttons[event.button]) {
+                this.mouse.clicked[event.button] = true;
             }
-            this.mouse.leftMouseDown = true;
-        } else if (event.button === 2) {
-            if (!this.mouse.rightMouseDown) {
-                this.mouse.rightMouseClicked = true; // Set right mouse clicked only on the first press
-            }
-            this.mouse.rightMouseDown = true;
-        } else if (event.button === 1) {
-            this.mouse.wheelDown = true;
+            this.mouse.buttons[event.button] = true;
         }
     }
 
     _handleMouseUp(event) {
-        if (event.button === 0) {
-            this.mouse.leftMouseDown = false;
-            this.mouse.leftMouseClicked = false; // Reset single-click state
-        } else if (event.button === 2) {
-            this.mouse.rightMouseDown = false;
-            this.mouse.rightMouseClicked = false; // Reset single-click state
-        } else if (event.button === 1) {
-            this.mouse.wheelDown = false;
+        if (event.button >= 0 && event.button <= 2) {
+            this.mouse.buttons[event.button] = false;
+            this.mouse.clicked[event.button] = false;
         }
     }
 
@@ -108,6 +114,46 @@ class InputHandler {
         this.scroll.deltaY = event.deltaY;
     }
 
+    _mouseBindingToIndex(b) {
+        if (b === "Mouse0") return 0;
+        if (b === "Mouse1") return 1;
+        if (b === "Mouse2") return 2;
+        return -1;
+    }
+
+    isActionDown(action) {
+        const keys = this.keyBindings[action];
+        if (!keys) return false;
+        return keys.some((b) => {
+            if (b === "ScrollUp" || b === "ScrollDown") return false; // scroll has no hold state
+            const idx = this._mouseBindingToIndex(b);
+            if (idx >= 0) return this.mouse.buttons[idx];
+            return !!this.keys[b];
+        });
+    }
+    isActionPressed(action) {
+        const keys = this.keyBindings[action];
+        if (!keys) return false;
+        for (const b of keys) {
+            const idx = this._mouseBindingToIndex(b);
+            if (idx >= 0) {
+                if (this.mouse.clicked[idx]) {
+                    this.mouse.clicked[idx] = false;
+                    return true;
+                }
+            } else if (b === "ScrollUp" && this.scroll.deltaY < 0) {
+                this.scroll.deltaY = 0;
+                return true;
+            } else if (b === "ScrollDown" && this.scroll.deltaY > 0) {
+                this.scroll.deltaY = 0;
+                return true;
+            } else if (this.keysDown[b]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Getters for key state
     isKeyDown(keyCode) {
         return this.keys[keyCode] || false; // True as long as the key is held down
@@ -117,26 +163,28 @@ class InputHandler {
         return this.keysDown[keyCode] || false;
     }
 
+    getChatTypingKeys() {
+        return Object.keys(this.keys);
+    }
+
     resetKeysPressed() {
         for (const key in this.keysDown) {
             this.keysDown[key] = false;
         }
     }
 
-    // Getters for mouse state
+    // Getters for mouse state (physical buttons; inventory UI uses these)
     isLeftMouseButtonPressed() {
-        if (this.mouse.leftMouseClicked) {
-            // Check for single-click event
-            this.mouse.leftMouseClicked = false; // Reset after being read
+        if (this.mouse.clicked[0]) {
+            this.mouse.clicked[0] = false;
             return true;
         }
         return false;
     }
 
     isRightMouseButtonPressed() {
-        if (this.mouse.rightMouseClicked) {
-            // Check for single-click event
-            this.mouse.rightMouseClicked = false; // Reset after being read
+        if (this.mouse.clicked[2]) {
+            this.mouse.clicked[2] = false;
             return true;
         }
         return false;
@@ -180,82 +228,23 @@ class InputHandler {
 
     // Resetters for mouse button states
     resetMouseState() {
-        this.mouse.leftMouseDown = false;
-        this.mouse.rightMouseDown = false;
-        this.mouse.leftMouseClicked = false;
-        this.mouse.rightMouseClicked = false;
+        this.mouse.buttons[0] = false;
+        this.mouse.buttons[1] = false;
+        this.mouse.buttons[2] = false;
+        this.mouse.clicked[0] = false;
+        this.mouse.clicked[1] = false;
+        this.mouse.clicked[2] = false;
     }
 
     // Direct mouse state checkers for continuous state
     isLeftMouseDown() {
-        return this.mouse.leftMouseDown;
+        return this.mouse.buttons[0];
     }
 
     isRightMouseDown() {
-        return this.mouse.rightMouseDown;
+        return this.mouse.buttons[2];
     }
 }
 
-// Define the keys you want to track
-const trackedKeys = [
-    "KeyA",
-    "KeyB",
-    "KeyC",
-    "KeyD",
-    "KeyE",
-    "KeyF",
-    "KeyG",
-    "KeyH",
-    "KeyI",
-    "KeyJ",
-    "KeyK",
-    "KeyL",
-    "KeyM",
-    "KeyN",
-    "KeyO",
-    "KeyP",
-    "KeyQ",
-    "KeyR",
-    "KeyS",
-    "KeyT",
-    "KeyU",
-    "KeyV",
-    "KeyW",
-    "KeyX",
-    "KeyY",
-    "KeyZ",
-    "Digit0",
-    "Digit1",
-    "Digit2",
-    "Digit3",
-    "Digit4",
-    "Digit5",
-    "Digit6",
-    "Digit7",
-    "Digit8",
-    "Digit9",
-    "Space",
-    "ArrowUp",
-    "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
-    "Escape",
-    "Enter",
-    "ShiftLeft",
-    "ShiftRight",
-    "ControlLeft",
-    "ControlRight",
-    "AltLeft",
-    "AltRight",
-    "Tab",
-    "Backspace",
-    "Minus",
-    "Equal",
-    "Backquote",
-    "Slash",
-    "Backslash",
-    "Period",
-];
-
-// Create an instance of the InputHandler with the keys you want to track
-const input = new InputHandler(trackedKeys);
+const keyBindings = loadKeyBindings();
+const input = new InputHandler(keyBindings);

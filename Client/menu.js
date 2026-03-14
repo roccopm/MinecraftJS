@@ -40,6 +40,10 @@ const quickConnectButton = document.getElementById("quick-connect-btn");
 const connectButton = document.getElementById("connect-btn");
 
 const optionsContainer = document.querySelector("#options-container");
+const optionsMain = document.getElementById("options-main");
+const controlsPanel = document.getElementById("controls-panel");
+const controls = document.getElementById("controls-list");
+const optionsPanelTitle = document.getElementById("options-panel-title");
 
 const musicVolumeSlider = document.getElementById("music-volume-slider");
 const musicVolumeLabel = document.getElementById("music-volume-label");
@@ -1241,8 +1245,208 @@ function gotoOptions() {
     hideMenu();
 
     optionsContainer.style.display = "flex";
+    if (optionsMain) optionsMain.style.display = "flex";
+    if (controlsPanel) controlsPanel.style.display = "none";
+    if (optionsPanelTitle) optionsPanelTitle.textContent = "Options";
+    if (rebindDocumentContextmenuHandler) {
+        document.removeEventListener("contextmenu", rebindDocumentContextmenuHandler, true);
+        rebindDocumentContextmenuHandler = null;
+    }
+    rebindSuppressContextMenuUntil = 0;
+    if (rebindKeydownHandler) document.removeEventListener("keydown", rebindKeydownHandler, true);
+    if (rebindMousedownHandler) document.removeEventListener("mousedown", rebindMousedownHandler, true);
+    if (rebindWheelHandler) document.removeEventListener("wheel", rebindWheelHandler, true);
+    if (rebindContextmenuHandler) document.removeEventListener("contextmenu", rebindContextmenuHandler, true);
+    if (controlsPanel) controlsPanel.style.pointerEvents = "";
+    rebindKeydownHandler = null;
+    rebindMousedownHandler = null;
+    rebindWheelHandler = null;
+    rebindContextmenuHandler = null;
+    waitingForRebindAction = null;
 
     loadSettings();
+}
+
+let controlsBindings = null;
+let waitingForRebindAction = null;
+let rebindKeydownHandler = null;
+let rebindMousedownHandler = null;
+let rebindWheelHandler = null;
+let rebindContextmenuHandler = null;
+let rebindDocumentContextmenuHandler = null;
+let rebindSuppressContextMenuUntil = 0;
+
+function gotoControls() {
+    if (!optionsMain || !controlsPanel || !controls) return;
+    optionsMain.style.display = "none";
+    controlsPanel.style.display = "flex";
+    if (optionsPanelTitle) optionsPanelTitle.textContent = "Key Binds";
+    controlsBindings = loadKeyBindings();
+    renderControlsList();
+}
+
+function isBindingDefault(action) {
+    const current = controlsBindings[action];
+    const defaultKeys = DEFAULT_KEY_BINDINGS[action];
+    if (!defaultKeys) return true;
+    if (!current || current.length !== defaultKeys.length) return false;
+    return defaultKeys.every((k, i) => k === current[i]);
+}
+
+function renderControlRow(action) {
+    const row = document.createElement("div");
+    row.className = "controls-row";
+    const label = document.createElement("span");
+    label.className = "controls-row-label";
+    label.textContent = getActionLabel(action);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn";
+    const keys = controlsBindings[action];
+    if (waitingForRebindAction === action) {
+        btn.textContent = "Press a key or mouse button...";
+    } else if (keys && keys.length > 0) {
+        btn.textContent = keys.map(getKeyDisplayName).join(", ");
+    } else {
+        btn.textContent = "Not set";
+    }
+    btn.onclick = () => startRebind(action);
+    const resetBtn = document.createElement("button");
+    resetBtn.type = "button";
+    resetBtn.className = "btn";
+    resetBtn.textContent = "Reset";
+    resetBtn.disabled = isBindingDefault(action);
+    resetBtn.onclick = () => {
+        if (!DEFAULT_KEY_BINDINGS[action]) return;
+        controlsBindings[action] = [...DEFAULT_KEY_BINDINGS[action]];
+        saveKeyBindings(controlsBindings);
+        renderControlsList();
+    };
+    row.appendChild(label);
+    row.appendChild(btn);
+    row.appendChild(resetBtn);
+    return row;
+}
+
+function renderControlsList() {
+    if (!controls || !controlsBindings) return;
+    controls.innerHTML = "";
+
+    const gameplayTitle = document.createElement("div");
+    gameplayTitle.className = "controls-section-title";
+    gameplayTitle.textContent = "Gameplay";
+    controls.appendChild(gameplayTitle);
+    for (const action of GAMEPLAY_ACTIONS) {
+        controls.appendChild(renderControlRow(action));
+    }
+
+    const debugTitle = document.createElement("div");
+    debugTitle.className = "controls-section-title";
+    debugTitle.textContent = "Debug";
+    controls.appendChild(debugTitle);
+    for (const action of DEBUG_ACTIONS) {
+        controls.appendChild(renderControlRow(action));
+    }
+}
+
+function startRebind(action) {
+    if (waitingForRebindAction) return;
+    if (rebindDocumentContextmenuHandler) {
+        document.removeEventListener("contextmenu", rebindDocumentContextmenuHandler, true);
+        rebindDocumentContextmenuHandler = null;
+    }
+    waitingForRebindAction = action;
+    renderControlsList();
+    if (controlsPanel) controlsPanel.style.pointerEvents = "none";
+
+    const documentContextmenuHandler = (e) => {
+        if (waitingForRebindAction || Date.now() < rebindSuppressContextMenuUntil) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
+    const finishRebind = (binding) => {
+        cancelRebind(keyHandler, mouseHandler, wheelHandler);
+        if (binding !== undefined) {
+            const key = binding[0];
+            const existingAction = REBINDABLE_ACTIONS.find(
+                (a) => a !== action && (controlsBindings[a] || []).includes(key)
+            );
+            if (existingAction) {
+                if (
+                    !confirm(
+                        `"${getKeyDisplayName(key)}" is already bound to "${getActionLabel(existingAction)}". Override and unbind it from that action?`
+                    )
+                ) {
+                    renderControlsList();
+                    return;
+                }
+                controlsBindings[existingAction] = [];
+            }
+            controlsBindings[action] = binding;
+        }
+        saveKeyBindings(controlsBindings);
+        renderControlsList();
+    };
+
+    const keyHandler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.code === "Escape") return finishRebind([]);
+        if (!e.code) return;
+        if (["ControlLeft", "ControlRight"].includes(e.code) && !confirm("Ctrl is not recommended as a binding because we can't prevent browser shortcuts (such as Ctrl+W to close the tab) from taking place.\n\nDo you want to use Ctrl anyway?")) {
+            finishRebind();
+            return;
+        }
+        finishRebind([e.code]);
+    };
+
+    const mouseHandler = (e) => {
+        if (e.button < 0 || e.button > 2) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.button === 2) rebindSuppressContextMenuUntil = Date.now() + 400;
+        finishRebind(["Mouse" + e.button]);
+    };
+
+    const wheelHandler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        finishRebind([e.deltaY < 0 ? "ScrollUp" : "ScrollDown"]);
+    };
+
+    rebindKeydownHandler = keyHandler;
+    rebindMousedownHandler = mouseHandler;
+    rebindWheelHandler = wheelHandler;
+    rebindContextmenuHandler = documentContextmenuHandler;
+    rebindDocumentContextmenuHandler = documentContextmenuHandler;
+    document.addEventListener("keydown", keyHandler, { once: true, capture: true });
+    document.addEventListener("mousedown", mouseHandler, true);
+    document.addEventListener("wheel", wheelHandler, { passive: false, capture: true });
+    document.addEventListener("contextmenu", documentContextmenuHandler, true);
+}
+
+function cancelRebind(keyHandler, mouseHandler, wheelHandler) {
+    if (keyHandler) document.removeEventListener("keydown", keyHandler, true);
+    if (mouseHandler) document.removeEventListener("mousedown", mouseHandler, true);
+    if (wheelHandler) document.removeEventListener("wheel", wheelHandler, true);
+    if (controlsPanel) controlsPanel.style.pointerEvents = "";
+    rebindKeydownHandler = null;
+    rebindMousedownHandler = null;
+    rebindWheelHandler = null;
+    waitingForRebindAction = null;
+}
+
+function resetControlsToDefault() {
+    if (!controlsBindings) return;
+    for (const action of REBINDABLE_ACTIONS) {
+        if (DEFAULT_KEY_BINDINGS[action]) {
+            controlsBindings[action] = [...DEFAULT_KEY_BINDINGS[action]];
+        }
+    }
+    saveKeyBindings(controlsBindings);
+    renderControlsList();
 }
 
 function showMenu() {

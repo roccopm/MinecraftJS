@@ -24,19 +24,113 @@ class Chat {
         this.autocompletePart = "";
 
         this.loadLog();
+        this._boundKeyHandler = this._handleChatKeyDown.bind(this);
     }
 
     openChat() {
         this.historyIndex = 0;
         this.inChat = true;
         if (player) player.canMove = false;
+        document.addEventListener("keydown", this._boundKeyHandler, {
+            capture: true,
+        });
     }
 
     closeChat() {
         this.inChat = false;
         if (player) player.canMove = true;
-
+        document.removeEventListener("keydown", this._boundKeyHandler, {
+            capture: true,
+        });
         this.currentMessage = "";
+    }
+
+    _handleChatKeyDown(event) {
+        event.preventDefault();
+        const key = event.key;
+
+        if (key === "Escape") {
+            this.closeChat();
+            event.stopPropagation();
+            return;
+        }
+        if (key === "Enter") {
+            this.send();
+            return;
+        }
+        if (key === "Tab") {
+            this.resetAutocomplete();
+            this.autocomplete();
+            return;
+        }
+        if (key === "Backspace") {
+            if (this.cursorPosition > 0) {
+                this.currentMessage =
+                    this.currentMessage.slice(0, this.cursorPosition - 1) +
+                    this.currentMessage.slice(this.cursorPosition);
+                this.cursorPosition--;
+            }
+            return;
+        }
+        if (key === "Delete") {
+            if (this.cursorPosition < this.currentMessage.length) {
+                this.currentMessage =
+                    this.currentMessage.slice(0, this.cursorPosition) +
+                    this.currentMessage.slice(this.cursorPosition + 1);
+            }
+            return;
+        }
+        if (key === "ArrowLeft") {
+            this.cursorPosition = Math.max(0, this.cursorPosition - 1);
+            return;
+        }
+        if (key === "ArrowRight") {
+            this.cursorPosition = Math.min(
+                this.currentMessage.length,
+                this.cursorPosition + 1
+            );
+            return;
+        }
+        if (key === "ArrowUp") {
+            if (this.chatLog.length > 0 && this.historyIndex < this.chatLog.length) {
+                if (this.historyIndex === -1) this.historyIndex = 0;
+                this.historyIndex++;
+                this.currentMessage =
+                    this.chatLog[this.chatLog.length - this.historyIndex];
+                this.cursorPosition = this.currentMessage.length;
+            }
+            return;
+        }
+        if (key === "ArrowDown") {
+            if (this.historyIndex > 1) {
+                this.historyIndex--;
+                this.currentMessage =
+                    this.chatLog[this.chatLog.length - this.historyIndex];
+                this.cursorPosition = this.currentMessage.length;
+            } else if (this.historyIndex === 1) {
+                this.historyIndex = -1;
+                this.currentMessage = "";
+                this.cursorPosition = 0;
+            }
+            return;
+        }
+
+        if (
+            event.key.length === 1 &&
+            event.key.charCodeAt(0) >= 32 &&
+            !event.ctrlKey &&
+            !event.altKey &&
+            !event.metaKey
+        ) {
+            if (this.currentMessage.length >= this.maxLength) return;
+            if (event.repeat) return;
+            this.resetAutocomplete();
+            this.currentMessage =
+                this.currentMessage.slice(0, this.cursorPosition) +
+                key +
+                this.currentMessage.slice(this.cursorPosition);
+            this.cursorPosition++;
+        }
     }
 
     send() {
@@ -330,9 +424,7 @@ class Chat {
     }
 
     isValidText(text) {
-        if (!/[a-zA-Z0-9]/.test(text)) return false;
-
-        return true;
+        return text != null && text.trim().length > 0;
     }
 
     doCheat(message) {
@@ -898,35 +990,6 @@ class Chat {
         }
     }
 
-    historyCycle() {
-        if (input.isKeyPressed("ArrowUp")) {
-            if (this.chatLog.length > 0) {
-                // Move to the previous message in the history
-                if (this.historyIndex < this.chatLog.length) {
-                    if (this.historyIndex == -1) this.historyIndex = 0;
-                    this.historyIndex++;
-                    this.currentMessage =
-                        this.chatLog[this.chatLog.length - this.historyIndex];
-                    this.cursorPosition = this.currentMessage.length;
-                }
-            }
-        }
-
-        if (input.isKeyPressed("ArrowDown")) {
-            // Move to the next message in the history or reset to an empty message
-            if (this.historyIndex > 1) {
-                this.historyIndex--;
-                this.currentMessage =
-                    this.chatLog[this.chatLog.length - this.historyIndex];
-                this.cursorPosition = this.currentMessage.length;
-            } else if (this.historyIndex === 1) {
-                this.historyIndex = -1; // Reset to current input
-                this.currentMessage = ""; // Clear the message if no history is selected
-                this.cursorPosition = 0;
-            }
-        }
-    }
-
     measureTextWidth(text, fontSize) {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
@@ -934,153 +997,24 @@ class Chat {
         return ctx.measureText(text).width;
     }
 
-    updateTyping() {
-        this.cursorPosition = Math.max(
-            0,
-            Math.min(this.currentMessage.length, this.cursorPosition),
-        );
-
-        const isShiftPressed =
-            input.isKeyDown("ShiftLeft") || input.isKeyDown("ShiftRight");
-
-        this.historyCycle();
-
-        trackedKeys.forEach((key) => {
-            if (input.isKeyPressed(key)) {
-                if (key !== "Tab") {
-                    this.resetAutocomplete();
-                }
-
-                if (key === "Tab") {
-                    this.autocomplete();
-                    return;
-                }
-                if (key === "Backspace") {
-                    if (this.cursorPosition > 0) {
-                        this.currentMessage =
-                            this.currentMessage.slice(
-                                0,
-                                this.cursorPosition - 1,
-                            ) + this.currentMessage.slice(this.cursorPosition);
-                        this.cursorPosition--;
-                    }
-                    return;
-                }
-                if (key === "Delete") {
-                    if (this.cursorPosition < this.currentMessage.length) {
-                        this.currentMessage =
-                            this.currentMessage.slice(0, this.cursorPosition) +
-                            this.currentMessage.slice(this.cursorPosition + 1);
-                    }
-                    return;
-                }
-                if (key === "ArrowLeft") {
-                    this.cursorPosition = Math.max(0, this.cursorPosition - 1);
-                    return;
-                }
-                if (key === "ArrowRight") {
-                    this.cursorPosition = Math.min(
-                        this.currentMessage.length,
-                        this.cursorPosition + 1,
-                    );
-                    return;
-                }
-                if (key === "Minus") {
-                    this.currentMessage =
-                        this.currentMessage.slice(0, this.cursorPosition) +
-                        "-" +
-                        this.currentMessage.slice(this.cursorPosition);
-                    this.cursorPosition++;
-                }
-
-                if (input.shiftPressed) {
-                    if (key === "Equal") {
-                        this.currentMessage =
-                            this.currentMessage.slice(0, this.cursorPosition) +
-                            "+" +
-                            this.currentMessage.slice(this.cursorPosition);
-                        this.cursorPosition++;
-                    }
-                }
-
-                if (this.currentMessage.length >= this.maxLength) return;
-
-                if (key.startsWith("Key")) {
-                    const letter = key.replace("Key", "");
-                    this.currentMessage =
-                        this.currentMessage.slice(0, this.cursorPosition) +
-                        (isShiftPressed
-                            ? letter.toUpperCase()
-                            : letter.toLowerCase()) +
-                        this.currentMessage.slice(this.cursorPosition);
-                    this.cursorPosition++;
-                } else if (key.startsWith("Digit")) {
-                    this.currentMessage =
-                        this.currentMessage.slice(0, this.cursorPosition) +
-                        key.replace("Digit", "") +
-                        this.currentMessage.slice(this.cursorPosition);
-                    this.cursorPosition++;
-                } else if (key === "Space") {
-                    this.currentMessage =
-                        this.currentMessage.slice(0, this.cursorPosition) +
-                        " " +
-                        this.currentMessage.slice(this.cursorPosition);
-                    this.cursorPosition++;
-                } else if (key === "Slash") {
-                    this.currentMessage =
-                        this.currentMessage.slice(0, this.cursorPosition) +
-                        "/" +
-                        this.currentMessage.slice(this.cursorPosition);
-                    this.cursorPosition++;
-                } else if (key === "Period") {
-                    this.currentMessage =
-                        this.currentMessage.slice(0, this.cursorPosition) +
-                        "." +
-                        this.currentMessage.slice(this.cursorPosition);
-                    this.cursorPosition++;
-                } else if (key === "Backquote") {
-                    if (isShiftPressed) {
-                        this.currentMessage =
-                            this.currentMessage.slice(0, this.cursorPosition) +
-                            "~" +
-                            this.currentMessage.slice(this.cursorPosition);
-                        this.cursorPosition++;
-                    }
-                }
-            }
-        });
-    }
-
     update() {
         if (!this.inChat) {
-            if (input.isKeyPressed("KeyT")) {
-                this.openChat();
-            }
-            if (input.isKeyPressed("Slash")) {
-                this.currentMessage = "/";
-                this.openChat();
-                this.cursorPosition = 1;
-            }
-
             // check message duration and hide if elapsed
             const now = Date.now();
             this.tempMessages = this.tempMessages.filter(
                 (msg) => now - msg.timestamp < this.messageDuration,
             );
         } else {
-            if (input.isKeyPressed("Escape")) this.closeChat();
-
-            this.updateTyping();
+            this.cursorPosition = Math.max(
+                0,
+                Math.min(this.currentMessage.length, this.cursorPosition),
+            );
 
             this.cursorBlinkTime += deltaTime;
 
             if (this.cursorBlinkTime >= 0.5) {
                 this.showCursor = !this.showCursor;
                 this.cursorBlinkTime = 0;
-            }
-
-            if (input.isKeyPressed("Enter")) {
-                this.send();
             }
         }
     }

@@ -12,15 +12,15 @@ function HandleDebugging() {
 
 function handleDebugInput() {
     if (player && !player.canMove) return; // e.g. pause menu open
-    if (input.isKeyPressed("KeyB")) toggleChunkBorders();
-    if (input.isKeyPressed("KeyN")) toggleCamera();
-    if (input.isKeyPressed("KeyH")) toggleHitbox();
-    if (input.isKeyPressed("KeyM")) togglePrintBlock();
-    if (input.isKeyPressed("KeyF")) toggleFileSize();
-    if (input.isKeyPressed("KeyI")) toggleFps();
-    if (input.isKeyPressed("KeyC")) toggleCoordinates();
-    if (input.isKeyPressed("KeyO") && typeof SaveWorld === "function") SaveWorld();
-    if (input.isKeyPressed("KeyP") && typeof SaveWorld === "function") SaveWorld(false, true);
+    if (input.isActionPressed("debugChunkBorders")) toggleChunkBorders();
+    if (input.isActionPressed("debugCamera")) toggleCamera();
+    if (input.isActionPressed("debugHitbox")) toggleHitbox();
+    if (input.isActionPressed("debugPrintBlock")) togglePrintBlock();
+    if (input.isActionPressed("debugFileSize")) toggleFileSize();
+    if (input.isActionPressed("debugFps")) toggleFps();
+    if (input.isActionPressed("debugCoordinates")) toggleCoordinates();
+    if (input.isActionPressed("debugSave") && typeof SaveWorld === "function") SaveWorld();
+    if (input.isActionPressed("debugSaveBackup") && typeof SaveWorld === "function") SaveWorld(false, true);
 }
 
 function updateDebugButtonLabels() {
@@ -67,7 +67,7 @@ function toggleCoordinates() {
 }
 
 function PrintBlockLogic() {
-    if (input.isLeftMouseDown() || input.isRightMouseDown()) {
+    if (input.isActionDown("attack") || input.isActionDown("place")) {
         const mousePos = input.getMousePositionOnBlockGrid();
         const block = GetBlockAtWorldPosition(mousePos.x, mousePos.y);
 
@@ -96,33 +96,33 @@ function CameraLogic() {
     const deceleration = 1;
 
     // Horizontal movement (A/D keys)
-    if (input.isKeyDown("KeyA"))
+    if (input.isActionDown("moveLeft"))
         camera.velocity.x = Math.max(
             camera.velocity.x - acceleration,
             -maxSpeed
         );
-    if (input.isKeyDown("KeyD"))
+    if (input.isActionDown("moveRight"))
         camera.velocity.x = Math.min(
             camera.velocity.x + acceleration,
             maxSpeed
         );
 
     // Vertical movement (W/S keys)
-    if (input.isKeyDown("KeyW"))
+    if (input.isActionDown("moveUp"))
         camera.velocity.y = Math.max(
             camera.velocity.y - acceleration,
             -maxSpeed
         );
-    if (input.isKeyDown("KeyS"))
+    if (input.isActionDown("moveDown"))
         camera.velocity.y = Math.min(
             camera.velocity.y + acceleration,
             maxSpeed
         );
 
     // Decelerate smoothly when no input
-    if (!input.isKeyDown("KeyA") && !input.isKeyDown("KeyD"))
+    if (!input.isActionDown("moveLeft") && !input.isActionDown("moveRight"))
         camera.velocity.x += -Math.sign(camera.velocity.x) * deceleration;
-    if (!input.isKeyDown("KeyW") && !input.isKeyDown("KeyS"))
+    if (!input.isActionDown("moveUp") && !input.isActionDown("moveDown"))
         camera.velocity.y += -Math.sign(camera.velocity.y) * deceleration;
 
     // Ensure velocity stops at zero

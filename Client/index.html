@@ -363,11 +363,11 @@
 
         <!-- Options menu -->
         <div class="modal-container" id="options-container">
-            <div class="center-modal">
+            <div class="center-modal" style="width: 100%">
                 <div class="world-create-top-container">
-                    <div class="big-text">Options</div>
+                    <div class="big-text" id="options-panel-title">Options</div>
                 </div>
-                <div class="options-modal">
+                <div class="options-modal" id="options-main">
                     <div class="slider-container">
                         <span class="slider-label" id="music-volume-label">Music - 100%</span>
                         <input type="range" class="slider-input" id="music-volume-slider" min="0" max="100" value="100">
@@ -377,20 +377,11 @@
                         <input type="range" class="slider-input" id="sfx-volume-slider" min="0" max="100" value="100">
                     </div>
                     <a class="btn" id="lighting-toggle-btn" onclick="toggleLighting()">Lighting - ON</a>
-                    
                     <a class="btn" onclick="showTexturePacks()">Texture Packs...</a>
+                    <a class="btn" id="controls-btn" onclick="gotoControls()">Controls...</a>
+                    <button type="button" class="btn" onclick="uploadSkin()" id="upload-skin-btn">Upload Skin</button>
+                    <button type="button" class="btn" onclick="clearSkin()">Clear Skin</button>
 
-                        
-                    <button
-                        onclick="uploadSkin()"
-                        id="upload-skin-btn"
-                        class="btn"
-                    >
-                        Upload Skin
-                    </button>
-                    <button onclick="clearSkin()" class="btn">
-                        Clear Skin
-                    </button>
                     <div class="input-field-container">
                         <div class="input-field-title">Username</div>
                         <input
@@ -407,12 +398,25 @@
                     </div>
 
                     <div class="button-space"></div>
-
                     <a onclick="backToMenu(), saveSettings()" class="btn">Done</a>
+                </div>
+
+                <!-- Key Binds -->
+                <div id="controls-panel" style="display: none;">
+                    <div class="controls-list-scroll">
+                        <div id="controls-list"></div>
+                    </div>
+                    <div class="world-buttons-container">
+                        <div>
+                            <button type="button" class="btn" onclick="resetControlsToDefault()">Reset to default</button>
+                            <a class="btn" onclick="gotoOptions()">Done</a>
+                        </div>
+                    </div>
                 </div>
             </div>
     </body>
 
+    <script src="Assets/utils/keyBindings.js"></script>
     <script src="buttonUtils.js"></script>
     <script src="menu.js"></script>
 </html>
