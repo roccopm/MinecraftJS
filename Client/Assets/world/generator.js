@@ -123,7 +123,7 @@ function BiomesInChunkCount(count) {
     // then print in percentage the distribution of biomes
     for (const biome in biomeCount) {
         console.log(
-            `${biome}: ${((biomeCount[biome] / count) * 100).toFixed(2)}%`
+            `${biome}: ${((biomeCount[biome] / count) * 100).toFixed(2)}%`,
         );
     }
 }
@@ -175,19 +175,19 @@ async function generateWorld(dimensionIndex = activeDimension) {
                 console.log("Chunk not loaded", chunkX, dimensionIndex);
                 const chunkFromServer = await GetChunkFromServer(
                     chunkX,
-                    dimensionIndex
+                    dimensionIndex,
                 ); // Ensure async handling
                 console.log(
                     "Chunk from server",
                     chunkX,
                     chunkFromServer,
-                    dimensionIndex
+                    dimensionIndex,
                 );
                 if (chunkFromServer) {
                     console.log(
                         "Loaded chunk from server",
                         chunkX,
-                        chunkFromServer
+                        chunkFromServer,
                     );
                     LoadChunk(chunkX, chunkFromServer, dimensionIndex);
                 } else {
@@ -195,7 +195,7 @@ async function generateWorld(dimensionIndex = activeDimension) {
                     const oldChunkData = getNeighborBiomeData(
                         i,
                         currentChunkIndex,
-                        dimensionIndex
+                        dimensionIndex,
                     );
                     generateChunk(i, chunkX, oldChunkData, dimensionIndex);
                 }
@@ -204,7 +204,7 @@ async function generateWorld(dimensionIndex = activeDimension) {
             const oldChunkData = getNeighborBiomeData(
                 i,
                 currentChunkIndex,
-                dimensionIndex
+                dimensionIndex,
             );
             generateChunk(i, chunkX, oldChunkData, dimensionIndex);
         } else {
@@ -233,7 +233,7 @@ function ServerPlaceBlock(
     y,
     blockType,
     isWall = false,
-    dimensionIndex = activeDimension
+    dimensionIndex = activeDimension,
 ) {
     if (!multiplayer) return;
     server.send({
@@ -259,7 +259,7 @@ function ServerBreakBlock(
     blockType,
     isWall = false,
     shouldDrop = false,
-    dimensionIndex = activeDimension
+    dimensionIndex = activeDimension,
 ) {
     if (!multiplayer) return;
     server.send({
@@ -354,7 +354,7 @@ function GenerateStructure(structure, x, y) {
                         blockY,
                         wallType,
                         null,
-                        true
+                        true,
                     );
                 }
             }
@@ -380,7 +380,7 @@ function GenerateChestWithLoot(lootTable, x, y, chunk) {
         x,
         y,
         Blocks.Chest,
-        new Metadata({ props: { storage: newStorage } })
+        new Metadata({ props: { storage: newStorage } }),
     );
 }
 
@@ -432,7 +432,7 @@ function calculateChunkBiome(chunkIndex, dimensionIndex = activeDimension) {
 function getNeighborBiomeData(
     currentIndex,
     cameraIndex,
-    dimensionIndex = activeDimension
+    dimensionIndex = activeDimension,
 ) {
     const neighborIndex =
         currentIndex < cameraIndex ? currentIndex + 1 : currentIndex - 1;
@@ -446,7 +446,7 @@ function generateChunk(
     chunkIndex,
     chunkX,
     oldChunkData,
-    dimensionIndex = activeDimension
+    dimensionIndex = activeDimension,
 ) {
     // console.log("Seed:", seed);
 
@@ -507,7 +507,7 @@ function generateStructures(dimensionIndex = activeDimension) {
         const chunkIndex = chunkX / (CHUNK_WIDTH * BLOCK_SIZE);
         const structureNoiseValue = dimension.noiseMaps.structure.getNoise(
             chunkIndex,
-            0
+            0,
         );
 
         // console.log(
@@ -583,7 +583,7 @@ function fill(
     endX,
     endY,
     blockType,
-    dimensionIndex = activeDimension
+    dimensionIndex = activeDimension,
 ) {
     const originalStartX = startX;
     const originalStartY = startY;
@@ -606,7 +606,7 @@ function fill(
                 blockType,
                 false,
                 dimensionIndex,
-                null
+                null,
             );
         }
     }
@@ -661,7 +661,7 @@ function GetBlockAtWorldPosition(
     worldX,
     worldY,
     wall = false,
-    dimensionIndex = activeDimension
+    dimensionIndex = activeDimension,
 ) {
     const targetChunk = GetChunkForX(worldX, dimensionIndex);
     if (!targetChunk || worldY >= CHUNK_HEIGHT * BLOCK_SIZE) return null;
@@ -705,7 +705,7 @@ function placePortalInDimension(dimension, position) {
             false,
             dimension,
             null,
-            false
+            false,
         );
     }
     // Top
@@ -720,7 +720,7 @@ function placePortalInDimension(dimension, position) {
             false,
             dimension,
             null,
-            false
+            false,
         );
     }
     // Sides
@@ -735,7 +735,7 @@ function placePortalInDimension(dimension, position) {
             false,
             dimension,
             null,
-            false
+            false,
         );
     }
     for (let i = 0; i < 4; i++) {
@@ -749,7 +749,7 @@ function placePortalInDimension(dimension, position) {
             false,
             dimension,
             null,
-            false
+            false,
         );
     }
     // Something to stand on under the portal
@@ -764,7 +764,7 @@ function placePortalInDimension(dimension, position) {
             false,
             dimension,
             null,
-            false
+            false,
         );
     }
 
@@ -781,14 +781,14 @@ function placePortalInDimension(dimension, position) {
                 false,
                 dimension,
                 null,
-                false
+                false,
             );
         }
     }
     // Return the bottom center of the portal
     return new Vector2(
         position.x + BLOCK_SIZE * 1.5,
-        position.y + BLOCK_SIZE * 3
+        position.y + BLOCK_SIZE * 3,
     );
 }
 
@@ -805,7 +805,7 @@ function checkAdjacentBlocks(position, wall = false) {
         const block = GetBlockAtWorldPosition(
             adjacentPos.x,
             adjacentPos.y,
-            wall
+            wall,
         );
         if (!block) continue;
 
@@ -825,7 +825,7 @@ function SetBlockTypeAtPosition(
     wall = false,
     dimensionIndex = activeDimension,
     metaData = null,
-    calculateY = true
+    calculateY = true,
 ) {
     if (calculateY) worldY = CHUNK_HEIGHT * BLOCK_SIZE - worldY;
 
@@ -847,7 +847,7 @@ function bufferBlock(
     dimensionIndex = activeDimension,
     metaData = null,
     wall = false,
-    calculateY = true
+    calculateY = true,
 ) {
     if (calculateY) worldY = CHUNK_HEIGHT * BLOCK_SIZE - worldY;
 

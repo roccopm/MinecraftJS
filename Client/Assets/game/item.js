@@ -11,6 +11,7 @@ class Item {
         smeltOutput = null,
         baseDamage = 0,
         foodValue = 0,
+        foodSaturation = 0,
         playMusicInJukebox = null,
         projectile = null,
         throwPower = 0,
@@ -28,6 +29,7 @@ class Item {
         this.durability = durability;
 
         this.foodValue = foodValue;
+        this.foodSaturation = foodSaturation;
 
         this.baseDamage = baseDamage;
 

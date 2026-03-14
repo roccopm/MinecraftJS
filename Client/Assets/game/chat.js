@@ -146,7 +146,7 @@ class Chat {
         let color = Colors.White; // Default color for regular messages
         if (this.currentMessage.startsWith("/", 0)) {
             this.doCheat(
-                this.currentMessage.slice(1, this.currentMessage.length)
+                this.currentMessage.slice(1, this.currentMessage.length),
             );
             message = "";
             color = Colors.Yellow; // Cheat commands use yellow
@@ -173,33 +173,33 @@ class Chat {
             "------------------------------------------------------",
             "",
             Colors.Green,
-            true
+            true,
         );
         this.message(
             "Welcome to Minecraft JS! Type /help for commands.",
             "",
-            Colors.Green
+            Colors.Green,
         );
         this.message(
             "This is a 2D Minecraft experience built with JavaScript.",
             "",
-            Colors.Green
+            Colors.Green,
         );
         this.message(
             "This project is open source and available on GitHub.",
             "",
-            Colors.Green
+            Colors.Green,
         );
         this.message(
             "Donations are appreciated to support development. :)",
             "",
-            Colors.Green
+            Colors.Green,
         );
         this.message(
             "------------------------------------------------------",
             "",
             Colors.Green,
-            true
+            true,
         );
     }
 
@@ -247,10 +247,9 @@ class Chat {
         } else {
             const commandName = parts[0].slice(1).toLowerCase();
             const command = commands.find(
-                (cmd) => cmd.name.toLowerCase() === commandName
+                (cmd) => cmd.name.toLowerCase() === commandName,
             );
             if (!command) {
-                console.log("No matching command found");
                 return [];
             }
 
@@ -260,15 +259,14 @@ class Chat {
             switch (argType) {
                 case "category.item":
                     const blockItems = Object.keys(Blocks).map(
-                        (name) => `Blocks.${name}`
+                        (name) => `Blocks.${name}`,
                     );
                     const items = Object.keys(Items).map(
-                        (name) => `Items.${name}`
+                        (name) => `Items.${name}`,
                     );
                     const itemSuggestions = [...blockItems, ...items].filter(
-                        (item) => item.toLowerCase().startsWith(prefix)
+                        (item) => item.toLowerCase().startsWith(prefix),
                     );
-                    console.log(`Item suggestions: ${itemSuggestions}`);
                     return itemSuggestions;
                 case "count":
                 case "damage":
@@ -291,37 +289,31 @@ class Chat {
                         "0",
                         player
                             ? Math.floor(
-                                  player.position.x / BLOCK_SIZE
+                                  player.position.x / BLOCK_SIZE,
                               ).toString()
                             : "0",
                     ];
                 case "entity":
                     const entitySuggestions = Object.keys(Entities).filter(
-                        (entity) => entity.toLowerCase().startsWith(prefix)
+                        (entity) => entity.toLowerCase().startsWith(prefix),
                     );
-                    console.log(`Entity suggestions: ${entitySuggestions}`);
                     return entitySuggestions;
                 case "structure":
                     const structureSuggestions = Object.keys(Structures).filter(
                         (structure) =>
-                            structure.toLowerCase().startsWith(prefix)
-                    );
-                    console.log(
-                        `Structure suggestions: ${structureSuggestions}`
+                            structure.toLowerCase().startsWith(prefix),
                     );
                     return structureSuggestions;
                 case "biome":
                     const biomeSuggestions = Object.keys(AllBiomes).filter(
-                        (biome) => biome.toLowerCase().startsWith(prefix)
+                        (biome) => biome.toLowerCase().startsWith(prefix),
                     );
-                    console.log(`Biome suggestions: ${biomeSuggestions}`);
                     return biomeSuggestions;
                 case "rule":
                     const ruleSuggestions = [
                         ...Object.keys(GAMERULES),
                         "list",
                     ].filter((rule) => rule.toLowerCase().startsWith(prefix));
-                    console.log(`Rule suggestions: ${ruleSuggestions}`);
                     return ruleSuggestions;
                 case "value":
                     return ["true", "false"];
@@ -331,11 +323,10 @@ class Chat {
                     return ["1", "3", "5", "7.5"];
                 case "block":
                     const blockSuggestions = Object.keys(Blocks).filter(
-                        (block) => block.toLowerCase().startsWith(prefix)
+                        (block) => block.toLowerCase().startsWith(prefix),
                     );
                     return blockSuggestions;
                 default:
-                    console.log("No suggestions for unknown argType");
                     return [];
             }
         }
@@ -358,7 +349,7 @@ class Chat {
             this.autocompletePart = currentPart;
             this.suggestions = this.generateSuggestions(
                 this.currentMessage,
-                cursorWordIndex
+                cursorWordIndex,
             );
         }
 
@@ -419,7 +410,7 @@ class Chat {
             this.message(
                 `Biome ${biomeName} found at ${chunkPos}.`,
                 "",
-                Colors.Green
+                Colors.Green,
             );
         } else {
             this.message("Biome not found.", "", Colors.Red);
@@ -433,9 +424,7 @@ class Chat {
     }
 
     isValidText(text) {
-        if (!/[a-zA-Z0-9]/.test(text)) return false;
-
-        return true;
+        return text != null && text.trim().length > 0;
     }
 
     doCheat(message) {
@@ -481,11 +470,15 @@ class Chat {
                 this.message(`Seed: ${seed}`);
 
                 if (!navigator?.clipboard) {
-                    console.log("Clipboard API not available");
+                    this.message(
+                        "Clipboard API not available. Unable to copy seed.",
+                        "",
+                        Colors.Red,
+                    );
                 } else {
                     navigator.clipboard.writeText(seed);
                 }
-                this.message("Seed copied to clipboard.");
+                this.message("Seed copied to clipboard.", "", Colors.Green);
                 break;
             case "hit":
                 if (!player) break;
@@ -554,7 +547,9 @@ class Chat {
                 worldToBlocks(position1).y
             }) to (${worldToBlocks(position2).x}, ${
                 worldToBlocks(position2).y
-            }) with ${blockName}.`
+            }) with ${blockName}.`,
+            "",
+            Colors.Green,
         );
     }
 
@@ -584,13 +579,13 @@ class Chat {
                 getChunkXForWorldX(position.x),
                 worldToLocal(position.x, position.y).x,
                 worldToLocal(position.x, position.y).y,
-                block
+                block,
             );
 
             this.cheatMessage(
                 `Set block ${blockName} at ${Math.floor(
-                    position.x
-                )}, ${Math.floor(position.y)}`
+                    position.x,
+                )}, ${Math.floor(position.y)}`,
             );
         } else {
             this.message("Block not found.", "", Colors.Red);
@@ -695,17 +690,17 @@ class Chat {
             GenerateStructure(
                 structureName,
                 player.position.x,
-                player.position.y
+                player.position.y,
             );
 
             this.cheatMessage(
-                `Structure ${structureName} generated at ${player.position.x}, ${player.position.y}`
+                `Structure ${structureName} generated at ${player.position.x}, ${player.position.y}`,
             );
         } else {
             this.message(
                 `Structure ${structureName} not found.`,
                 "",
-                Colors.Red
+                Colors.Red,
             );
         }
     }
@@ -734,8 +729,6 @@ class Chat {
 
         position.y = -position.y + CHUNK_HEIGHT * BLOCK_SIZE;
 
-        console.log(itemName);
-
         if (Entities[itemName] != null) {
             const entity = Entities[itemName];
 
@@ -744,7 +737,7 @@ class Chat {
             }
 
             this.cheatMessage(
-                `Summoned ${count} ${entity.name} at ${position.x}, ${position.y}`
+                `Summoned ${count} ${entity.name} at ${position.x}, ${position.y}`,
             );
         } else {
             this.message("Entity not found.", "", Colors.Red);
@@ -818,7 +811,7 @@ class Chat {
         if (gamemode === undefined || gamemode < 0 || gamemode > 3) {
             this.message(
                 "Invalid gamemode. Valid gamemodes are: " +
-                    "0 (Survival) 1 (Creative) 2 (Adventure) 3 (Spectator)"
+                    "0 (Survival) 1 (Creative) 2 (Adventure) 3 (Spectator)",
             );
             return;
         }
@@ -926,7 +919,7 @@ class Chat {
                     category === "Blocks"
                         ? GetBlock(item).name
                         : GetItem(item).name
-                } to the player.`
+                } to the player.`,
             );
         } else {
             this.message(`Item ${messageArray[1]} not found.`, "", Colors.Red);
@@ -942,7 +935,7 @@ class Chat {
         if (!this.inChat) {
             const maxMessages = Math.min(
                 this.viewHistory,
-                this.tempMessages.length
+                this.tempMessages.length,
             );
             for (let i = 0; i < maxMessages; i++) {
                 const msg = this.tempMessages[this.tempMessages.length - 1 - i];
@@ -1004,23 +997,18 @@ class Chat {
         return ctx.measureText(text).width;
     }
 
-    updateTyping() {
-        this.cursorPosition = Math.max(
-            0,
-            Math.min(this.currentMessage.length, this.cursorPosition)
-        );
-    }
-
     update() {
         if (!this.inChat) {
             // check message duration and hide if elapsed
             const now = Date.now();
             this.tempMessages = this.tempMessages.filter(
-                (msg) => now - msg.timestamp < this.messageDuration
+                (msg) => now - msg.timestamp < this.messageDuration,
             );
-        }
-        else {
-            this.updateTyping();
+        } else {
+            this.cursorPosition = Math.max(
+                0,
+                Math.min(this.currentMessage.length, this.cursorPosition),
+            );
 
             this.cursorBlinkTime += deltaTime;
 

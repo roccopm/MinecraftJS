@@ -47,7 +47,7 @@ function SaveWorld(message = true, toFile = false) {
 
         // Save dimension-specific pendingBlocks
         const savedPendingBlocks = Array.from(
-            dimension.pendingBlocks.entries()
+            dimension.pendingBlocks.entries(),
         ).map(([chunkX, entry]) => ({
             chunkX,
             dimensionIndex: index,
@@ -77,6 +77,10 @@ function SaveWorld(message = true, toFile = false) {
         currentSave.inventoryItems = JSON.stringify(playerInventory);
         currentSave.gamemode = player.gamemode;
         currentSave.health = player.health;
+        currentSave.foodLevel = player.foodLevel;
+        currentSave.foodSaturationLevel = player.foodSaturationLevel;
+        currentSave.foodExhaustionLevel = player.foodExhaustionLevel;
+        currentSave.foodTickTimer = player.foodTickTimer;
         currentSave.currentSlot = hotbar.currentSlot;
         currentSave.activeDimension = activeDimension;
         currentSave.flying = player.abilities.flying;
@@ -128,7 +132,7 @@ function SaveWorld(message = true, toFile = false) {
         worlds = [worldData];
     }
 
-    if (message) chat.message("World saved successfully!");
+    if (message) chat.message("World saved successfully!", "", Colors.Green);
 
     localStorage.setItem("worlds", JSON.stringify(worlds));
     localStorage.setItem(id, saveData);
@@ -252,7 +256,7 @@ async function LoadWorld(save) {
                     chunk.x,
                     chunk,
                     dimData.index,
-                    dimension.pendingBlocks
+                    dimension.pendingBlocks,
                 );
             });
 
@@ -265,9 +269,9 @@ async function LoadWorld(save) {
                             blocks,
                         });
                         console.log(
-                            `Loaded pendingBlocks for chunkX: ${chunkX} in dimension ${dimensionIndex}`
+                            `Loaded pendingBlocks for chunkX: ${chunkX} in dimension ${dimensionIndex}`,
                         );
-                    }
+                    },
                 );
             }
         });
@@ -279,7 +283,7 @@ async function LoadWorld(save) {
                 chunk.x,
                 chunk,
                 Dimensions.Overworld,
-                dimension.pendingBlocks
+                dimension.pendingBlocks,
             );
         });
 
@@ -287,7 +291,7 @@ async function LoadWorld(save) {
             currentSave.pendingBlocks.forEach(
                 ({ chunkX, dimensionIndex, blocks }) => {
                     const targetDimension = getDimension(
-                        dimensionIndex || Dimensions.Overworld
+                        dimensionIndex || Dimensions.Overworld,
                     );
                     targetDimension.pendingBlocks.set(chunkX, {
                         dimensionIndex,
@@ -296,9 +300,9 @@ async function LoadWorld(save) {
                     console.log(
                         `Loaded legacy pendingBlocks for chunkX: ${chunkX} in dimension ${
                             dimensionIndex || Dimensions.Overworld
-                        }`
+                        }`,
                     );
-                }
+                },
             );
         }
     }
@@ -329,12 +333,27 @@ async function LoadWorld(save) {
                 }
             }
 
-            if (currentSave.currentSlot)
+            if (currentSave.currentSlot !== undefined)
                 hotbar.currentSlot = currentSave.currentSlot;
 
             player.setGamemode(currentSave.gamemode);
 
-            if (currentSave.health) player.health = currentSave.health;
+            if (currentSave.health !== undefined)
+                player.health = currentSave.health;
+
+            if (currentSave.foodLevel !== undefined)
+                player.foodLevel = currentSave.foodLevel;
+
+            if (currentSave.foodSaturationLevel !== undefined)
+                player.foodSaturationLevel = currentSave.foodSaturationLevel;
+
+            if (currentSave.foodExhaustionLevel !== undefined)
+                player.foodExhaustionLevel = currentSave.foodExhaustionLevel;
+
+            if (currentSave.foodTickTimer !== undefined)
+                player.foodTickTimer = currentSave.foodTickTimer;
+
+            player.clampFoodStats();
 
             if (currentSave.flying) player.abilities.flying = true;
 
@@ -354,7 +373,7 @@ async function LoadChunk(
     x,
     chunk,
     dimensionIndex = Dimensions.Overworld,
-    pendingBlocks
+    pendingBlocks,
 ) {
     console.log("Loading chunk:", x, chunk, dimensionIndex);
 
@@ -372,10 +391,19 @@ async function LoadChunk(
         CHUNK_WIDTH,
         biome,
         previousChunk,
-        true
+        true,
     );
 
     constructedChunk.generateArray();
+
+    constructedChunk.dimension = dimensionIndex;
+
+    for (let by = 0; by < CHUNK_HEIGHT; by++) {
+        for (let bx = 0; bx < CHUNK_WIDTH; bx++) {
+            constructedChunk.blocks[by][bx].dimensionIndex = dimensionIndex;
+            constructedChunk.walls[by][bx].dimensionIndex = dimensionIndex;
+        }
+    }
 
     // First pass: Set block types without handling extended blocks
     for (let y = 0; y < CHUNK_HEIGHT; y++) {
@@ -393,7 +421,7 @@ async function LoadChunk(
                 metaData,
                 false, // Skip calculateY since we're in chunk-local coordinates
                 false, // Skip updateBlocks to do it in a second pass
-                false
+                false,
             );
 
             // Walls
@@ -409,7 +437,7 @@ async function LoadChunk(
                 wallMetaData,
                 false,
                 false,
-                false
+                false,
             );
         }
     }
