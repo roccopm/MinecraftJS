@@ -624,6 +624,11 @@ class Player extends Entity {
         this.inventory.dropAll(this.position);
     }
 
+    footstepEmitterLogic() {
+        if (this.isLocal() && !input.isActionDown("sprint")) return;
+        super.footstepEmitterLogic();
+    }
+
     tickUpdate() {
         this.entityTickUpdate();
     }
