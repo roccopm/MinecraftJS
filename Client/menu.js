@@ -292,8 +292,11 @@ function populateWorlds() {
             }
 
             worldNameElement.textContent = world.name;
-            worldDateElement.textContent =
-                new Date(world.lastPlayed).toLocaleString() + ` - ${worldSize}KB`;
+            const lastPlayedDate = new Date(world.lastPlayed);
+            const lastPlayedDisplay = isNaN(lastPlayedDate.getTime())
+                ? world.lastPlayed
+                : lastPlayedDate.toLocaleString();
+            worldDateElement.textContent = lastPlayedDisplay + ` - ${worldSize}KB`;
             worldElement.style.display = "flex";
 
             worldElement.addEventListener("click", () => {
@@ -313,7 +316,7 @@ function initializeDefaultTexturePack() {
         const defaultPack = {
             id: defaultPackId,
             name: "Default",
-            dateAdded: new Date().toLocaleString(),
+            dateAdded: new Date().toISOString(),
             icon: "Assets/sprites/menu/worldPreview.png",
             description: "Default Minecraft JS texture pack",
         };
@@ -409,7 +412,7 @@ function uploadTexturePack() {
                 const packInfo = {
                     id: packId,
                     name: file.name.replace(".zip", ""),
-                    dateAdded: new Date().toLocaleString(),
+                    dateAdded: new Date().toISOString(),
                     icon: null,
                     description: null,
                 };
@@ -615,7 +618,7 @@ function uploadWorld() {
             const worldData = {
                 id,
                 name: worldName,
-                lastPlayed: new Date().toLocaleString(),
+                lastPlayed: new Date().toISOString(),
             };
             let worlds = JSON.parse(localStorage.getItem("worlds")) || [];
             worlds.push(worldData);
