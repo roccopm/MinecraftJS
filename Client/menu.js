@@ -1263,11 +1263,24 @@ function gotoOptions() {
     rebindWheelHandler = null;
     rebindContextmenuHandler = null;
     waitingForRebindAction = null;
+    if (rebindGamepadRAFId != null) cancelAnimationFrame(rebindGamepadRAFId);
+    rebindGamepadRAFId = null;
+    if (controlsPanelRAFId != null) cancelAnimationFrame(controlsPanelRAFId);
+    controlsPanelRAFId = null;
+    if (controlsPanelKeydownHandler) {
+        document.removeEventListener("keydown", controlsPanelKeydownHandler, true);
+        controlsPanelKeydownHandler = null;
+    }
 
     loadSettings();
 }
 
-let controlsBindings = null;
+let controlsKeyBindings = null;
+let controlsGamepadBindings = null;
+let controlsPanelDevice = "keyboard";
+let controlsPanelRAFId = null;
+let controlsPanelKeydownHandler = null;
+const GAMEPAD_AXIS_DEADZONE = 0.15;
 let waitingForRebindAction = null;
 let rebindKeydownHandler = null;
 let rebindMousedownHandler = null;
@@ -1275,20 +1288,58 @@ let rebindWheelHandler = null;
 let rebindContextmenuHandler = null;
 let rebindDocumentContextmenuHandler = null;
 let rebindSuppressContextMenuUntil = 0;
+let rebindGamepadRAFId = null;
+let rebindPrevGamepadButtons = [];
 
 function gotoControls() {
     if (!optionsMain || !controlsPanel || !controls) return;
     optionsMain.style.display = "none";
     controlsPanel.style.display = "flex";
-    if (optionsPanelTitle) optionsPanelTitle.textContent = "Key Binds";
-    controlsBindings = loadKeyBindings();
+    if (optionsPanelTitle) optionsPanelTitle.textContent = "Controls";
+    controlsKeyBindings = typeof loadBindings === "function" ? loadBindings("keyboard") : {};
+    controlsGamepadBindings = typeof loadBindings === "function" ? loadBindings("controller") : {};
+    controlsPanelDevice = "keyboard";
     renderControlsList();
+    if (controlsPanelKeydownHandler) {
+        document.removeEventListener("keydown", controlsPanelKeydownHandler, true);
+        controlsPanelKeydownHandler = null;
+    }
+    controlsPanelKeydownHandler = (e) => {
+        if (waitingForRebindAction) return;
+        controlsPanelDevice = "keyboard";
+        renderControlsList();
+    };
+    document.addEventListener("keydown", controlsPanelKeydownHandler, true);
+        function controlsPanelPoll() {
+        if (!controlsPanel || controlsPanel.style.display !== "flex") {
+            controlsPanelRAFId = null;
+            if (controlsPanelKeydownHandler) {
+                document.removeEventListener("keydown", controlsPanelKeydownHandler, true);
+                controlsPanelKeydownHandler = null;
+            }
+            return;
+        }
+        const gp = typeof getFirstConnectedGamepad === "function" ? getFirstConnectedGamepad() : null;
+        if (gp && gp.connected) {
+            const any =
+                Array.from(gp.buttons).some((b) => (typeof b === "object" ? b.value > 0.5 : !!b)) ||
+                Array.from(gp.axes).some((a) => Math.abs(a) > GAMEPAD_AXIS_DEADZONE);
+            if (any && !waitingForRebindAction) {
+                const prev = controlsPanelDevice;
+                controlsPanelDevice = "controller";
+                if (prev !== "controller") renderControlsList();
+            }
+        }
+        controlsPanelRAFId = requestAnimationFrame(controlsPanelPoll);
+    }
+    controlsPanelRAFId = requestAnimationFrame(controlsPanelPoll);
 }
 
 function isBindingDefault(action) {
-    const current = controlsBindings[action];
-    const defaultKeys = DEFAULT_KEY_BINDINGS[action];
-    if (!defaultKeys) return true;
+    const defaults = controlsPanelDevice === "controller" ? DEFAULT_GAMEPAD_BINDINGS : DEFAULT_KEY_BINDINGS;
+    const current = (controlsPanelDevice === "controller" ? controlsGamepadBindings : controlsKeyBindings)[action];
+    const defaultKeys = defaults[action];
+    if (!defaultKeys || defaultKeys.length === 0) return !current || current.length === 0;
     if (!current || current.length !== defaultKeys.length) return false;
     return defaultKeys.every((k, i) => k === current[i]);
 }
@@ -1302,11 +1353,13 @@ function renderControlRow(action) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn";
-    const keys = controlsBindings[action];
+    const bindings = controlsPanelDevice === "controller" ? controlsGamepadBindings : controlsKeyBindings;
+    const keys = bindings ? bindings[action] : [];
+    const getDisplayName = typeof getButtonDisplayName === "function" ? getButtonDisplayName : getKeyDisplayName;
     if (waitingForRebindAction === action) {
-        btn.textContent = "Press a key or mouse button...";
+        btn.textContent = controlsPanelDevice === "controller" ? "Press a controller button..." : "Press a key or mouse button...";
     } else if (keys && keys.length > 0) {
-        btn.textContent = keys.map(getKeyDisplayName).join(", ");
+        btn.textContent = keys.map(getDisplayName).join(", ");
     } else {
         btn.textContent = "Not set";
     }
@@ -1316,10 +1369,16 @@ function renderControlRow(action) {
     resetBtn.className = "btn";
     resetBtn.textContent = "Reset";
     resetBtn.disabled = isBindingDefault(action);
+    const defaults = controlsPanelDevice === "controller" ? DEFAULT_GAMEPAD_BINDINGS : DEFAULT_KEY_BINDINGS;
     resetBtn.onclick = () => {
-        if (!DEFAULT_KEY_BINDINGS[action]) return;
-        controlsBindings[action] = [...DEFAULT_KEY_BINDINGS[action]];
-        saveKeyBindings(controlsBindings);
+        if (!defaults[action]) return;
+        if (controlsPanelDevice === "controller") {
+            controlsGamepadBindings[action] = [...(defaults[action] || [])];
+            saveBindings("controller", controlsGamepadBindings);
+        } else {
+            controlsKeyBindings[action] = [...(defaults[action] || [])];
+            saveBindings("keyboard", controlsKeyBindings);
+        }
         renderControlsList();
     };
     row.appendChild(label);
@@ -1329,7 +1388,8 @@ function renderControlRow(action) {
 }
 
 function renderControlsList() {
-    if (!controls || !controlsBindings) return;
+    const bindings = controlsPanelDevice === "controller" ? controlsGamepadBindings : controlsKeyBindings;
+    if (!controls || !bindings) return;
     controls.innerHTML = "";
 
     const gameplayTitle = document.createElement("div");
@@ -1367,26 +1427,33 @@ function startRebind(action) {
     };
 
     const finishRebind = (binding) => {
+        if (rebindGamepadRAFId != null) cancelAnimationFrame(rebindGamepadRAFId);
+        rebindGamepadRAFId = null;
         cancelRebind(keyHandler, mouseHandler, wheelHandler);
         if (binding !== undefined) {
             const key = binding[0];
+            const isGamepad = typeof key === "string" && key.startsWith("Gamepad0_");
+            const bindings = isGamepad ? controlsGamepadBindings : controlsKeyBindings;
+            controlsPanelDevice = isGamepad ? "controller" : "keyboard";
+            const getDisplayName = typeof getButtonDisplayName === "function" ? getButtonDisplayName : getKeyDisplayName;
             const existingAction = REBINDABLE_ACTIONS.find(
-                (a) => a !== action && (controlsBindings[a] || []).includes(key)
+                (a) => a !== action && (bindings[a] || []).includes(key)
             );
             if (existingAction) {
                 if (
                     !confirm(
-                        `"${getKeyDisplayName(key)}" is already bound to "${getActionLabel(existingAction)}". Override and unbind it from that action?`
+                        `"${getDisplayName(key)}" is already bound to "${getActionLabel(existingAction)}". Override and unbind it from that action?`
                     )
                 ) {
                     renderControlsList();
                     return;
                 }
-                controlsBindings[existingAction] = [];
+                bindings[existingAction] = bindings[existingAction].filter((k) => k !== key);
             }
-            controlsBindings[action] = binding;
+            bindings[action] = binding;
+            if (isGamepad) saveBindings("controller", controlsGamepadBindings);
+            else saveBindings("keyboard", controlsKeyBindings);
         }
-        saveKeyBindings(controlsBindings);
         renderControlsList();
     };
 
@@ -1425,6 +1492,24 @@ function startRebind(action) {
     document.addEventListener("mousedown", mouseHandler, true);
     document.addEventListener("wheel", wheelHandler, { passive: false, capture: true });
     document.addEventListener("contextmenu", documentContextmenuHandler, true);
+
+    function pollGamepadForRebind() {
+        if (!waitingForRebindAction) return;
+        const gp = typeof getFirstConnectedGamepad === "function" ? getFirstConnectedGamepad() : null;
+        if (gp && gp.connected) {
+            const buttons = Array.from(gp.buttons).map((b) => (typeof b === "object" ? b.value > 0.5 : !!b));
+            for (let i = 0; i < buttons.length; i++) {
+                if (buttons[i] && !rebindPrevGamepadButtons[i]) {
+                    finishRebind(["Gamepad0_Button" + i]);
+                    return;
+                }
+            }
+            rebindPrevGamepadButtons = buttons;
+        }
+        rebindGamepadRAFId = requestAnimationFrame(pollGamepadForRebind);
+    }
+    rebindPrevGamepadButtons = [];
+    rebindGamepadRAFId = requestAnimationFrame(pollGamepadForRebind);
 }
 
 function cancelRebind(keyHandler, mouseHandler, wheelHandler) {
@@ -1432,6 +1517,8 @@ function cancelRebind(keyHandler, mouseHandler, wheelHandler) {
     if (mouseHandler) document.removeEventListener("mousedown", mouseHandler, true);
     if (wheelHandler) document.removeEventListener("wheel", wheelHandler, true);
     if (controlsPanel) controlsPanel.style.pointerEvents = "";
+    if (rebindGamepadRAFId != null) cancelAnimationFrame(rebindGamepadRAFId);
+    rebindGamepadRAFId = null;
     rebindKeydownHandler = null;
     rebindMousedownHandler = null;
     rebindWheelHandler = null;
@@ -1439,13 +1526,15 @@ function cancelRebind(keyHandler, mouseHandler, wheelHandler) {
 }
 
 function resetControlsToDefault() {
-    if (!controlsBindings) return;
+    const bindings = controlsPanelDevice === "controller" ? controlsGamepadBindings : controlsKeyBindings;
+    const defaults = controlsPanelDevice === "controller" ? DEFAULT_GAMEPAD_BINDINGS : DEFAULT_KEY_BINDINGS;
+    if (!bindings) return;
     for (const action of REBINDABLE_ACTIONS) {
-        if (DEFAULT_KEY_BINDINGS[action]) {
-            controlsBindings[action] = [...DEFAULT_KEY_BINDINGS[action]];
+        if (defaults[action] && defaults[action].length > 0) {
+            bindings[action] = [...defaults[action]];
         }
     }
-    saveKeyBindings(controlsBindings);
+    saveBindings(controlsPanelDevice, controlsPanelDevice === "controller" ? controlsGamepadBindings : controlsKeyBindings);
     renderControlsList();
 }
 
@@ -1513,3 +1602,82 @@ startMusicOnFirstInteraction();
 
 removeTexturePackButton.addEventListener("click", removeTexturePack);
 worldPlayButton.disabled = true;
+
+// --- Menu gamepad navigation (single controller) ---
+function isMenuPanelVisible(el) {
+    if (!el) return false;
+    const s = window.getComputedStyle(el);
+    return s.display !== "none" && s.visibility !== "hidden";
+}
+
+function getMenuFocusables() {
+    if (optionsContainer && isMenuPanelVisible(optionsContainer) && controlsPanel && isMenuPanelVisible(controlsPanel)) {
+        const rows = controls ? Array.from(controls.querySelectorAll(".controls-row")) : [];
+        const btns = [];
+        rows.forEach((row) => {
+            const bindBtn = row.querySelector("button.btn");
+            const resetBtn = row.querySelectorAll("button.btn")[1];
+            if (bindBtn) btns.push(bindBtn);
+            if (resetBtn) btns.push(resetBtn);
+        });
+        const bottom = controlsPanel.querySelectorAll(".world-buttons-container .btn");
+        bottom.forEach((el) => btns.push(el));
+        return btns;
+    }
+    if (optionsContainer && isMenuPanelVisible(optionsContainer) && optionsMain && isMenuPanelVisible(optionsMain)) {
+        const sel = optionsMain.querySelectorAll(".slider-input, .btn, .input-field");
+        return Array.from(sel).filter((el) => el.offsetParent != null);
+    }
+    if (menuContainer && isMenuPanelVisible(menuContainer) && (!worldSelectContainer || !isMenuPanelVisible(worldSelectContainer)) && (!optionsContainer || !isMenuPanelVisible(optionsContainer))) {
+        return Array.from(menuContainer.querySelectorAll(".buttons .btn")).filter((el) => el.offsetParent != null);
+    }
+    if (worldSelectContainer && isMenuPanelVisible(worldSelectContainer)) {
+        const worldItems = worldSelectContainer.querySelectorAll(".world-select .world-container");
+        const bottomBtns = worldSelectContainer.querySelectorAll(".world-buttons-container .btn");
+        return [...Array.from(worldItems), ...Array.from(bottomBtns)].filter((el) => el.offsetParent != null);
+    }
+    if (texturePackSelectContainer && isMenuPanelVisible(texturePackSelectContainer)) {
+        const packItems = texturePackSelectContainer.querySelectorAll(".world-select .world-container");
+        const bottomBtns = texturePackSelectContainer.querySelectorAll(".world-buttons-container .btn");
+        return [...Array.from(packItems), ...Array.from(bottomBtns)].filter((el) => el.offsetParent != null);
+    }
+    if (serverSelectContainer && isMenuPanelVisible(serverSelectContainer)) {
+        const serverItems = serverSelectContainer.querySelectorAll(".world-select .world-container, .server-list .world-container");
+        const bottomBtns = serverSelectContainer.querySelectorAll(".world-buttons-container .btn, .world-buttons-container a.btn");
+        return [...Array.from(serverItems), ...Array.from(bottomBtns)].filter((el) => el.offsetParent != null);
+    }
+    if (addServerContainer && isMenuPanelVisible(addServerContainer)) {
+        const inputs = addServerContainer.querySelectorAll("input, .btn");
+        return Array.from(inputs).filter((el) => el.offsetParent != null);
+    }
+    if (quickConnectContainer && isMenuPanelVisible(quickConnectContainer)) {
+        const inputs = quickConnectContainer.querySelectorAll("input, .btn");
+        return Array.from(inputs).filter((el) => el.offsetParent != null);
+    }
+    if (worldCreateContainer && isMenuPanelVisible(worldCreateContainer)) {
+        const inputs = worldCreateContainer.querySelectorAll("input, .btn, .world-create-bottom-container .btn");
+        return Array.from(inputs).filter((el) => el.offsetParent != null);
+    }
+    return [];
+}
+
+function getMenuBackAction() {
+    if (optionsContainer && isMenuPanelVisible(optionsContainer) && controlsPanel && isMenuPanelVisible(controlsPanel)) return gotoOptions;
+    if (optionsContainer && isMenuPanelVisible(optionsContainer)) return backToMenu;
+    if (worldSelectContainer && isMenuPanelVisible(worldSelectContainer)) return backToMenu;
+    if (texturePackSelectContainer && isMenuPanelVisible(texturePackSelectContainer)) return () => { gotoOptions(); };
+    if (serverSelectContainer && isMenuPanelVisible(serverSelectContainer)) return backToMenu;
+    if (addServerContainer && isMenuPanelVisible(addServerContainer)) return () => { addServerContainer.style.display = "none"; serverSelectContainer.style.display = "flex"; };
+    if (quickConnectContainer && isMenuPanelVisible(quickConnectContainer)) return () => { quickConnectContainer.style.display = "none"; serverSelectContainer.style.display = "flex"; };
+    if (worldCreateContainer && isMenuPanelVisible(worldCreateContainer)) return backToWorldSelection;
+    return null;
+}
+
+if (menuContainer && typeof MenuGamepadNavigator !== "undefined") {
+    const menuGamepadNav = new MenuGamepadNavigator(
+        getMenuFocusables,
+        getMenuBackAction,
+        () => !!waitingForRebindAction
+    );
+    menuGamepadNav.start();
+}

@@ -355,7 +355,8 @@ body {
     display: none;
 }
 
-.world-container.selected {
+.world-container.selected,
+.world-container.menu-focused {
     background-color: rgba(0, 0, 0, 0.6);
 
     outline: solid rgb(210, 210, 210) 3px;
@@ -609,7 +610,8 @@ body {
     background-origin: content-box;
     pointer-events: none;
 }
-.btn:hover {
+.btn:hover,
+.btn.menu-focused {
     --btn-img: url("Assets/sprites/menu/menu_button_hover.png");
     --btn-center-img: var(--btn-center-img-hover);
 }
@@ -617,7 +619,8 @@ body {
     --btn-img: url("Assets/sprites/menu/menu_button_disabled.png");
     --btn-center-img: var(--btn-center-img-disabled);
 }
-.btn:disabled:hover {
+.btn:disabled:hover,
+.btn:disabled.menu-focused {
     cursor: auto;
     --btn-img: url("Assets/sprites/menu/menu_button_disabled.png");
     --btn-center-img: var(--btn-center-img-disabled);
@@ -713,10 +716,12 @@ body {
     background: transparent;
     image-rendering: pixelated;
 }
-.slider-input:hover::-webkit-slider-thumb {
+.slider-input:hover::-webkit-slider-thumb,
+.slider-input.menu-focused::-webkit-slider-thumb {
     border-image: url("Assets/sprites/menu/menu_button_hover.png") 0 4 0 4 / 0 var(--btn-edge) stretch;
 }
-.slider-input:hover::-moz-range-thumb {
+.slider-input:hover::-moz-range-thumb,
+.slider-input.menu-focused::-moz-range-thumb {
     border-image: url("Assets/sprites/menu/menu_button_hover.png") 0 4 0 4 / 0 var(--btn-edge) stretch;
 }
 

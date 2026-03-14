@@ -7,6 +7,7 @@ class PauseMenu {
         this._page = 0; // 0 = closed, 1+ = current page number
         this.container.classList.remove("visible");
         this.pages.forEach((el) => el.classList.remove("active"));
+        this._menuNav = null;
     }
 
     get page() {
@@ -32,7 +33,19 @@ class PauseMenu {
                 player.canMove = false;
                 if (player.resetBreaking) player.resetBreaking();
             }
+            if (typeof MenuGamepadNavigator !== "undefined") {
+                this._menuNav = new MenuGamepadNavigator(
+                    () => this._getFocusables(),
+                    () => (this._page > 1 ? () => this.setPage(1) : () => this.close()),
+                    () => false
+                );
+                this._menuNav.start();
+            }
         } else {
+            if (this._menuNav) {
+                this._menuNav.stop();
+                this._menuNav = null;
+            }
             this.container.classList.remove("visible");
             this.page = 0;
             this.root.style.setProperty("--drawMouse", "none");
@@ -51,6 +64,12 @@ class PauseMenu {
 
     getActive() {
         return this._page > 0;
+    }
+
+    _getFocusables() {
+        const activePage = this.pages.find((p) => p.classList.contains("active"));
+        if (!activePage) return [];
+        return Array.from(activePage.querySelectorAll("button.btn, a.btn")).filter((el) => el.offsetParent != null);
     }
 
     update() {

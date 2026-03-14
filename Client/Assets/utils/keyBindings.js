@@ -122,6 +122,68 @@ const DEBUG_ACTIONS = [
 
 const REBINDABLE_ACTIONS = [...GAMEPLAY_ACTIONS, ...DEBUG_ACTIONS];
 
+// Gamepad: one controller (index 0). Buttons 0–11, axes 0–3 (left X/Y, right X/Y).
+// Axis bindings use _Neg (value < -deadzone) or _Pos (value > deadzone).
+const DEFAULT_GAMEPAD_BINDINGS = {
+    attack: ["Gamepad0_Button7"],
+    pickBlock: ["Gamepad0_Button3"],
+    place: ["Gamepad0_Button6"],
+    moveUp: ["Gamepad0_Axis1_Neg"],
+    moveDown: ["Gamepad0_Axis1_Pos"],
+    moveLeft: ["Gamepad0_Axis0_Neg"],
+    moveRight: ["Gamepad0_Axis0_Pos"],
+    jump: ["Gamepad0_Button0"],
+    sprint: ["Gamepad0_Button10"],
+    use: ["Gamepad0_Button2"],
+    drop: ["Gamepad0_Button1"],
+    hotbarUp: ["Gamepad0_Button4"],
+    hotbarDown: ["Gamepad0_Button5"],
+    hotbar1: [],
+    hotbar2: [],
+    hotbar3: [],
+    hotbar4: [],
+    hotbar5: [],
+    hotbar6: [],
+    hotbar7: [],
+    hotbar8: [],
+    hotbar9: [],
+    chatOpen: ["Gamepad0_Button8"],
+    chatCommand: [],
+    chatClose: ["Gamepad0_Button1"],
+    chatSubmit: ["Gamepad0_Button0"],
+    chatHistoryUp: [],
+    chatHistoryDown: [],
+    pause: ["Gamepad0_Button9"],
+    debugChunkBorders: [],
+    debugCamera: [],
+    debugHitbox: [],
+    debugPrintBlock: [],
+    debugFileSize: [],
+    debugFps: [],
+    debugCoordinates: [],
+    debugSave: [],
+    debugSaveBackup: [],
+};
+
+const GAMEPAD_DISPLAY_NAMES = {
+    Gamepad0_Button0: "A",
+    Gamepad0_Button1: "B",
+    Gamepad0_Button2: "X",
+    Gamepad0_Button3: "Y",
+    Gamepad0_Button4: "LB",
+    Gamepad0_Button5: "RB",
+    Gamepad0_Button6: "LT",
+    Gamepad0_Button7: "RT",
+    Gamepad0_Button8: "Back",
+    Gamepad0_Button9: "Start",
+    Gamepad0_Button10: "L3",
+    Gamepad0_Button11: "R3",
+    Gamepad0_Axis0_Neg: "Left Stick Left",
+    Gamepad0_Axis0_Pos: "Left Stick Right",
+    Gamepad0_Axis1_Neg: "Left Stick Up",
+    Gamepad0_Axis1_Pos: "Left Stick Down",
+};
+
 const KEY_DISPLAY_NAMES = {
     Mouse0: "Left Click",
     Mouse1: "Middle Click",
@@ -192,30 +254,53 @@ function getKeyDisplayName(keyCode) {
     return KEY_DISPLAY_NAMES[keyCode] || keyCode;
 }
 
+function getButtonDisplayName(code) {
+    if (GAMEPAD_DISPLAY_NAMES[code]) return GAMEPAD_DISPLAY_NAMES[code];
+    return KEY_DISPLAY_NAMES[code] || code;
+}
+
 function getActionLabel(action) {
     return ACTION_LABELS[action] || action;
 }
 
-function loadKeyBindings() {
+const INPUT_TYPE = Object.freeze({ KEYBOARD: "keyboard", CONTROLLER: "controller" });
+
+const BINDINGS_CONFIG = Object.freeze({
+    [INPUT_TYPE.KEYBOARD]: {
+        storageKey: "keyBindings",
+        defaults: DEFAULT_KEY_BINDINGS,
+        pauseBinding: ["Escape"],
+    },
+    [INPUT_TYPE.CONTROLLER]: {
+        storageKey: "gamepadBindings",
+        defaults: DEFAULT_GAMEPAD_BINDINGS,
+        pauseBinding: ["Gamepad0_Button9"],
+    },
+});
+
+function loadBindings(inputType) {
+    const config = BINDINGS_CONFIG[inputType];
+    if (!config) return {};
     try {
-        
-        const raw = localStorage.getItem("keyBindings");
-        if (!raw) return { ...DEFAULT_KEY_BINDINGS };
+        const raw = localStorage.getItem(config.storageKey);
+        if (!raw) return { ...config.defaults };
         const parsed = JSON.parse(raw);
-        const out = { ...DEFAULT_KEY_BINDINGS };
-        for (const action of Object.keys(DEFAULT_KEY_BINDINGS)) {
+        const out = { ...config.defaults };
+        for (const action of Object.keys(config.defaults)) {
             if (Array.isArray(parsed[action])) {
                 out[action] = parsed[action];
             }
         }
         return out;
     } catch (e) {
-        return { ...DEFAULT_KEY_BINDINGS };
+        return { ...config.defaults };
     }
 }
 
-function saveKeyBindings(bindings) {
+function saveBindings(inputType, bindings) {
+    const config = BINDINGS_CONFIG[inputType];
+    if (!config) return;
     const out = { ...bindings };
-    out.pause = ["Escape"];
-    localStorage.setItem("keyBindings", JSON.stringify(out));
+    out.pause = config.pauseBinding;
+    localStorage.setItem(config.storageKey, JSON.stringify(out));
 }

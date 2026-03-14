@@ -138,6 +138,7 @@ async function gameLoop() {
 }
 
 function updateGame() {
+    if (typeof input !== "undefined" && input.pollGamepad) input.pollGamepad(deltaTime);
     updateEntities();
     updateParticleEmitters();
 
