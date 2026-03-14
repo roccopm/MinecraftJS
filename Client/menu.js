@@ -1252,6 +1252,14 @@ function gotoControls() {
     renderControlsList();
 }
 
+function isBindingDefault(action) {
+    const current = controlsBindings[action];
+    const defaultKeys = DEFAULT_KEY_BINDINGS[action];
+    if (!defaultKeys) return true;
+    if (!current || current.length !== defaultKeys.length) return false;
+    return defaultKeys.every((k, i) => k === current[i]);
+}
+
 function renderControlRow(action) {
     const row = document.createElement("div");
     row.className = "controls-row";
@@ -1260,7 +1268,7 @@ function renderControlRow(action) {
     label.textContent = getActionLabel(action);
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn controls-fixed-btn";
+    btn.className = "btn";
     const keys = controlsBindings[action];
     if (waitingForRebindAction === action) {
         btn.textContent = "Press a key...";
@@ -1270,8 +1278,20 @@ function renderControlRow(action) {
         btn.textContent = "Not set";
     }
     btn.onclick = () => startRebind(action);
+    const resetBtn = document.createElement("button");
+    resetBtn.type = "button";
+    resetBtn.className = "btn";
+    resetBtn.textContent = "Reset";
+    resetBtn.disabled = isBindingDefault(action);
+    resetBtn.onclick = () => {
+        if (!DEFAULT_KEY_BINDINGS[action]) return;
+        controlsBindings[action] = [...DEFAULT_KEY_BINDINGS[action]];
+        saveKeyBindings(controlsBindings);
+        renderControlsList();
+    };
     row.appendChild(label);
     row.appendChild(btn);
+    row.appendChild(resetBtn);
     return row;
 }
 

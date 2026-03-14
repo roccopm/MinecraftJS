@@ -87,12 +87,15 @@ body {
     padding: 10px;
     padding-right: 0.25rem;
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 18rem max-content auto;
     align-items: center;
+    column-gap: 2.5rem;
+    row-gap: 0.5rem;
 }
 
 .controls-section-title {
+    grid-column: 1 / -1;
     font-family: "Pixel";
     font-size: 1.75rem;
     color: white;
@@ -109,10 +112,9 @@ body {
 }
 
 .controls-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    gap: 2.5rem;
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
 }
 
 
@@ -134,16 +136,6 @@ body {
     flex-direction: row;
     gap: 1rem;
     margin-top: 0.5rem;
-}
-
-/* Fixed-size buttons (override .btn width) */
-.btn.controls-fixed-btn {
-    width: 12rem;
-    min-width: 12rem;
-    max-width: 12rem;
-    flex: 0 0 auto;
-    box-sizing: border-box;
-    white-space: nowrap;
 }
 
 .full-width {
