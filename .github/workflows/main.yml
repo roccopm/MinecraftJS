@@ -22,6 +22,11 @@ jobs:
         working-directory: ./Client
         run: npm ci
 
+      - name: Zip Server folder
+        run: |
+          zip -r server.zip Server
+          mv server.zip Client/server.zip
+
       - name: Deploy client folder to itch.io
         uses: yeslayla/butler-publish-itchio-action@master
         env:
