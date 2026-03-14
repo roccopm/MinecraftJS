@@ -21,7 +21,7 @@ async function loadVanillaTextures() {
     for (const itemKey in Items) {
         const item = GetItem(Items[itemKey]);
         if (item.sprite) {
-            spritePaths.push(`items Recomendado por favor intenta de nuevo.`);
+            spritePaths.push(`items/${item.sprite}`);
         }
     }
 

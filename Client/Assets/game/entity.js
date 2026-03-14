@@ -420,7 +420,6 @@ class Entity {
     }
 
     updateEntity() {
-        this.calculateGravity();
         this.updatePositionWithVelocity();
         this.bounceSprite();
         this.playFootstepSounds();
@@ -611,9 +610,9 @@ class Entity {
         this.offset.y = Math.sin((Date.now() - this.originDate) / 120) * 1.5;
     }
 
-    calculateGravity() {
+    calculateGravity(dt = deltaTime) {
         if (this.noGravity) return;
-        this.velocity.y += GRAVITY * Math.min(deltaTime, 1 / 30);
+        this.velocity.y += GRAVITY * dt;
     }
 
     calculateForce() {
@@ -622,17 +621,17 @@ class Entity {
         this.shouldAddForce = { x: 0, y: 0 };
     }
 
-    handleTargetVelocity() {
+    handleTargetVelocity(dt = deltaTime) {
         if (this.isGettingKnockback) return;
         if (this.targetVelocity.x === 0) return;
         if (this.velocity.x < this.targetVelocity.x) {
-            this.velocity.x += this.acceleration * BLOCK_SIZE * deltaTime;
+            this.velocity.x += this.acceleration * BLOCK_SIZE * dt;
             if (this.velocity.x > this.targetVelocity.x) {
                 this.velocity.x = this.targetVelocity.x;
             }
         }
         if (this.velocity.x > this.targetVelocity.x) {
-            this.velocity.x -= this.acceleration * BLOCK_SIZE * deltaTime;
+            this.velocity.x -= this.acceleration * BLOCK_SIZE * dt;
             if (this.velocity.x < this.targetVelocity.x) {
                 this.velocity.x = this.targetVelocity.x;
             }
@@ -640,27 +639,45 @@ class Entity {
         this.targetVelocity = new Vector2();
     }
 
-    updatePositionWithVelocity() {
+    updatePositionWithVelocity(delta = deltaTime) {
         if (!this.getCurrentChunk()?.generated) return;
+
+        const maxStepDeltaTime = 1 / 30;
+        const maxCatchupDeltaTime = 0.25;
+        const totalDeltaTime = Math.min(
+            Math.max(0, delta),
+            maxCatchupDeltaTime,
+        );
+        const stepCount = Math.max(
+            1,
+            Math.ceil(totalDeltaTime / maxStepDeltaTime),
+        );
+        const stepDeltaTime = totalDeltaTime / stepCount;
+
+        for (let i = 0; i < stepCount; i++) {
+            this.updatePositionWithVelocityStep(stepDeltaTime);
+        }
+    }
+
+    updatePositionWithVelocityStep(stepDeltaTime) {
+        this.calculateGravity(stepDeltaTime);
 
         this.wasColliding = false;
 
-        this.handleTargetVelocity();
+        this.handleTargetVelocity(stepDeltaTime);
 
-        // Cap deltaTime to avoid huge jumps
-        const cappedDeltaTime = Math.min(deltaTime, 1 / 30);
         const nextPositionX =
-            this.position.x + this.velocity.x * cappedDeltaTime;
+            this.position.x + this.velocity.x * stepDeltaTime;
         const nextPositionY =
-            this.position.y + this.velocity.y * cappedDeltaTime;
+            this.position.y + this.velocity.y * stepDeltaTime;
 
-        this.applyDrag();
+        this.applyDrag(stepDeltaTime);
         this.clampHorizontalVelocity();
 
         if (this.noCollision) {
             this.calculateForce();
-            this.position.x += this.velocity.x * cappedDeltaTime;
-            this.position.y += this.velocity.y * cappedDeltaTime;
+            this.position.x += this.velocity.x * stepDeltaTime;
+            this.position.y += this.velocity.y * stepDeltaTime;
             return;
         }
 
@@ -798,19 +815,19 @@ class Entity {
             this.velocity.y = 0;
         }
 
-        this.fluidLogic(collidingBlocks, cappedDeltaTime);
+        this.fluidLogic(collidingBlocks, stepDeltaTime);
         this.calculateForce();
 
         if (!this.grounded && !this.swimming)
             this.fallDistance +=
-                (this.velocity.y / BLOCK_SIZE) * cappedDeltaTime;
+                (this.velocity.y / BLOCK_SIZE) * stepDeltaTime;
         else this.fallDistance = 0;
 
         if (!leftCollision && !rightCollision) {
-            this.position.x += this.velocity.x * cappedDeltaTime;
+            this.position.x += this.velocity.x * stepDeltaTime;
         }
         if (!downCollision && !upCollision && !steppedUp) {
-            this.position.y += this.velocity.y * cappedDeltaTime;
+            this.position.y += this.velocity.y * stepDeltaTime;
         }
     }
 
@@ -971,7 +988,7 @@ class Entity {
         });
     }
 
-    applyDrag() {
+    applyDrag(dt = deltaTime) {
         if (this.targetVelocity.x !== 0) return;
         if (this.isGettingKnockback) return;
         if (this.velocity.x > 0) {
@@ -979,14 +996,14 @@ class Entity {
                 this.drag *
                 100 *
                 (this.type === EntityTypes.Player ? 1 : 0.2) *
-                deltaTime;
+                dt;
             if (this.velocity.x < 0) this.velocity.x = 0;
         } else if (this.velocity.x < 0) {
             this.velocity.x +=
                 this.drag *
                 100 *
                 (this.type === EntityTypes.Player ? 1 : 0.2) *
-                deltaTime;
+                dt;
             if (this.velocity.x > 0) this.velocity.x = 0;
         }
     }
