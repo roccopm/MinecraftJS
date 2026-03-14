@@ -45,8 +45,10 @@ const controlsPanel = document.getElementById("controls-panel");
 const controls = document.getElementById("controls-list");
 const optionsPanelTitle = document.getElementById("options-panel-title");
 
-const musicToggleButton = document.getElementById("music-toggle-btn");
-const sfxToggleButton = document.getElementById("sfx-toggle-btn");
+const musicVolumeSlider = document.getElementById("music-volume-slider");
+const musicVolumeLabel = document.getElementById("music-volume-label");
+const sfxVolumeSlider = document.getElementById("sfx-volume-slider");
+const sfxVolumeLabel = document.getElementById("sfx-volume-label");
 const lightingToggleButton = document.getElementById("lighting-toggle-btn");
 const usernameInput = document.querySelector("#username-input");
 const usernameFooter = document.querySelector("#username-footer");
@@ -63,8 +65,8 @@ let lastPingTime = 0;
 let cachedServerStatuses = [];
 
 let currentSettings = {
-    sfx: true,
-    music: true,
+    musicVolume: 100,
+    sfxVolume: 100,
     lighting: true,
     username: "",
 };
@@ -134,30 +136,19 @@ function downloadServer() {
     document.body.removeChild(link);
 }
 
-function toggleSFX() {
-    currentSettings.sfx = !currentSettings.sfx;
-
-    sfxToggleButton.textContent =
-        "SFX - " + (currentSettings.sfx ? "On" : "Off");
+function updateMusicVolume(value) {
+    currentSettings.musicVolume = value;
+    musicVolumeLabel.textContent = "Music - " + value + "%";
+    if (music) {
+        music.volume = (value / 100) * 0.3;
+    }
+    localStorage.setItem("settings", JSON.stringify(currentSettings));
 }
 
-function toggleMusic() {
-    currentSettings.music = !currentSettings.music;
-
-    if (!currentSettings.music) {
-        if (music) {
-            music.volume = 0;
-        }
-    } else {
-        if (music) {
-            music.volume = 0.3;
-        } else {
-            playRandomMusic();
-        }
-    }
-
-    musicToggleButton.textContent =
-        "Music - " + (currentSettings.music ? "On" : "Off");
+function updateSFXVolume(value) {
+    currentSettings.sfxVolume = value;
+    sfxVolumeLabel.textContent = "SFX - " + value + "%";
+    localStorage.setItem("settings", JSON.stringify(currentSettings));
 }
 
 function toggleLighting() {
@@ -186,19 +177,43 @@ function setUsernameFooter(username) {
 function loadSettings() {
     const settings = JSON.parse(localStorage.getItem("settings"));
     if (settings) {
-        currentSettings = { ...currentSettings, ...settings };
+        currentSettings.lighting = settings.lighting !== false;
+        currentSettings.username = settings.username || "";
+        currentSettings.musicVolume =
+            settings.musicVolume ?? (settings.music === false ? 0 : 100);
+        currentSettings.sfxVolume =
+            settings.sfxVolume ?? (settings.sfx === false ? 0 : 100);
     }
 
-    sfxToggleButton.textContent =
-        "SFX - " + (currentSettings.sfx ? "On" : "Off");
-    musicToggleButton.textContent =
-        "Music - " + (currentSettings.music ? "On" : "Off");
+    if (musicVolumeSlider) {
+        musicVolumeSlider.value = currentSettings.musicVolume;
+        musicVolumeLabel.textContent =
+            "Music - " + currentSettings.musicVolume + "%";
+    }
+    if (sfxVolumeSlider) {
+        sfxVolumeSlider.value = currentSettings.sfxVolume;
+        sfxVolumeLabel.textContent =
+            "SFX - " + currentSettings.sfxVolume + "%";
+    }
     lightingToggleButton.textContent =
         "Lighting - " + (currentSettings.lighting ? "On" : "Off");
 
     setUsernameFooter(currentSettings.username);
 
     usernameInput.value = "";
+}
+
+if (musicVolumeSlider) {
+    musicVolumeSlider.addEventListener("input", () => {
+        const value = parseInt(musicVolumeSlider.value, 10);
+        updateMusicVolume(value);
+    });
+}
+if (sfxVolumeSlider) {
+    sfxVolumeSlider.addEventListener("input", () => {
+        const value = parseInt(sfxVolumeSlider.value, 10);
+        updateSFXVolume(value);
+    });
 }
 
 loadSettings();
@@ -222,7 +237,7 @@ function playGame() {
 }
 
 function playRandomMusic() {
-    if (!currentSettings.music) return;
+    if (currentSettings.musicVolume === 0) return;
 
     const randomTrack =
         musicTracks[Math.floor(Math.random() * musicTracks.length)];
@@ -233,7 +248,7 @@ let music = null;
 
 function playMusic(track) {
     music = new Audio(`Assets/audio/music/menu/${track}.mp3`);
-    music.volume = 0.3;
+    music.volume = (currentSettings.musicVolume / 100) * 0.3;
     music.play();
     music.addEventListener("ended", () => {
         setTimeout(() => {
@@ -243,7 +258,7 @@ function playMusic(track) {
 }
 
 function startMusicOnFirstInteraction() {
-    if (!currentSettings.music) return;
+    if (currentSettings.musicVolume === 0) return;
     const start = () => {
         playRandomMusic();
         document.removeEventListener("click", start);
@@ -281,8 +296,11 @@ function populateWorlds() {
             }
 
             worldNameElement.textContent = world.name;
-            worldDateElement.textContent =
-                new Date(world.lastPlayed).toLocaleString() + ` - ${worldSize}KB`;
+            const lastPlayedDate = new Date(world.lastPlayed);
+            const lastPlayedDisplay = isNaN(lastPlayedDate.getTime())
+                ? world.lastPlayed
+                : lastPlayedDate.toLocaleString();
+            worldDateElement.textContent = lastPlayedDisplay + ` - ${worldSize}KB`;
             worldElement.style.display = "flex";
 
             worldElement.addEventListener("click", () => {
@@ -302,7 +320,7 @@ function initializeDefaultTexturePack() {
         const defaultPack = {
             id: defaultPackId,
             name: "Default",
-            dateAdded: new Date().toLocaleString(),
+            dateAdded: new Date().toISOString(),
             icon: "Assets/sprites/menu/worldPreview.png",
             description: "Default Minecraft JS texture pack",
         };
@@ -398,7 +416,7 @@ function uploadTexturePack() {
                 const packInfo = {
                     id: packId,
                     name: file.name.replace(".zip", ""),
-                    dateAdded: new Date().toLocaleString(),
+                    dateAdded: new Date().toISOString(),
                     icon: null,
                     description: null,
                 };
@@ -604,7 +622,7 @@ function uploadWorld() {
             const worldData = {
                 id,
                 name: worldName,
-                lastPlayed: new Date().toLocaleString(),
+                lastPlayed: new Date().toISOString(),
             };
             let worlds = JSON.parse(localStorage.getItem("worlds")) || [];
             worlds.push(worldData);
