@@ -18,9 +18,18 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install Client dependencies
         working-directory: ./Client
         run: npm ci
+
+      - name: Install Server dependencies
+        working-directory: ./Server
+        run: npm install
+
+      - name: Zip Server folder
+        run: |
+          cd Server
+          zip -r ../Client/server.zip .
 
       - name: Deploy client folder to itch.io
         uses: yeslayla/butler-publish-itchio-action@master
