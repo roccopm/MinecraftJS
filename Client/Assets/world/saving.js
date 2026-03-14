@@ -119,7 +119,7 @@ function SaveWorld(message = true, toFile = false) {
     worldData = {
         id: id,
         name: worldName,
-        lastPlayed: new Date().toLocaleString(),
+        lastPlayed: new Date().toISOString(),
     };
 
     if (worlds) {
