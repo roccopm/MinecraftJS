@@ -60,18 +60,18 @@ const ACTION_LABELS = {
     chatHistoryUp: "Chat History Up",
     chatHistoryDown: "Chat History Down",
     pause: "Pause / Back",
-    debugChunkBorders: "Debug: Chunk Borders",
-    debugCamera: "Debug: Camera",
-    debugHitbox: "Debug: Hitbox",
-    debugPrintBlock: "Debug: Print Block",
-    debugFileSize: "Debug: File Size",
-    debugFps: "Debug: FPS",
-    debugCoordinates: "Debug: Coordinates",
-    debugSave: "Debug: Save World",
-    debugSaveBackup: "Debug: Save Backup",
+    debugChunkBorders: "Chunk Borders",
+    debugCamera: "Camera",
+    debugHitbox: "Hitbox",
+    debugPrintBlock: "Print Block",
+    debugFileSize: "File Size",
+    debugFps: "FPS",
+    debugCoordinates: "Coordinates",
+    debugSave: "Save World",
+    debugSaveBackup: "Save Backup",
 };
 
-const REBINDABLE_ACTIONS = [
+const GAMEPLAY_ACTIONS = [
     "moveUp",
     "moveDown",
     "moveLeft",
@@ -91,8 +91,21 @@ const REBINDABLE_ACTIONS = [
     "hotbar9",
     "chatOpen",
     "chatCommand",
-    "pause",
 ];
+
+const DEBUG_ACTIONS = [
+    "debugChunkBorders",
+    "debugCamera",
+    "debugHitbox",
+    "debugPrintBlock",
+    "debugFileSize",
+    "debugFps",
+    "debugCoordinates",
+    "debugSave",
+    "debugSaveBackup",
+];
+
+const REBINDABLE_ACTIONS = [...GAMEPLAY_ACTIONS, ...DEBUG_ACTIONS];
 
 const KEY_DISPLAY_NAMES = {
     KeyA: "A",
@@ -182,5 +195,7 @@ function loadKeyBindings() {
 }
 
 function saveKeyBindings(bindings) {
-    localStorage.setItem("keyBindings", JSON.stringify(bindings));
+    const out = { ...bindings };
+    out.pause = ["Escape"];
+    localStorage.setItem("keyBindings", JSON.stringify(out));
 }

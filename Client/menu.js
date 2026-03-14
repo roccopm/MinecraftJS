@@ -43,6 +43,7 @@ const optionsContainer = document.querySelector("#options-container");
 const optionsMain = document.getElementById("options-main");
 const controlsPanel = document.getElementById("controls-panel");
 const controls = document.getElementById("controls-list");
+const optionsPanelTitle = document.getElementById("options-panel-title");
 
 const musicToggleButton = document.getElementById("music-toggle-btn");
 const sfxToggleButton = document.getElementById("sfx-toggle-btn");
@@ -1228,6 +1229,11 @@ function gotoOptions() {
     optionsContainer.style.display = "flex";
     if (optionsMain) optionsMain.style.display = "flex";
     if (controlsPanel) controlsPanel.style.display = "none";
+    if (optionsPanelTitle) optionsPanelTitle.textContent = "Options";
+    if (rebindKeydownHandler) {
+        document.removeEventListener("keydown", rebindKeydownHandler);
+        rebindKeydownHandler = null;
+    }
     waitingForRebindAction = null;
 
     loadSettings();
@@ -1235,37 +1241,58 @@ function gotoOptions() {
 
 let controlsBindings = null;
 let waitingForRebindAction = null;
+let rebindKeydownHandler = null;
 
 function gotoControls() {
     if (!optionsMain || !controlsPanel || !controls) return;
     optionsMain.style.display = "none";
-    controlsPanel.style.display = "block";
+    controlsPanel.style.display = "flex";
+    if (optionsPanelTitle) optionsPanelTitle.textContent = "Key Binds";
     controlsBindings = loadKeyBindings();
     renderControlsList();
+}
+
+function renderControlRow(action) {
+    const row = document.createElement("div");
+    row.className = "controls-row";
+    const label = document.createElement("span");
+    label.className = "controls-row-label";
+    label.textContent = getActionLabel(action);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn controls-fixed-btn";
+    const keys = controlsBindings[action];
+    if (waitingForRebindAction === action) {
+        btn.textContent = "Press a key...";
+    } else if (keys && keys.length > 0) {
+        btn.textContent = keys.map(getKeyDisplayName).join(", ");
+    } else {
+        btn.textContent = "Not set";
+    }
+    btn.onclick = () => startRebind(action);
+    row.appendChild(label);
+    row.appendChild(btn);
+    return row;
 }
 
 function renderControlsList() {
     if (!controls || !controlsBindings) return;
     controls.innerHTML = "";
-    for (const action of REBINDABLE_ACTIONS) {
-        const row = document.createElement("div");
-        row.className = "controls-row";
-        const label = document.createElement("span");
-        label.className = "controls-row-label";
-        label.textContent = getActionLabel(action);
-        const keyDisplay = document.createElement("span");
-        keyDisplay.className = "controls-row-key";
-        const keys = controlsBindings[action];
-        keyDisplay.textContent = keys && keys.length > 0 ? keys.map(getKeyDisplayName).join(", ") : "—";
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn controls-fixed-btn";
-        btn.textContent = waitingForRebindAction === action ? "Press a key..." : "Change";
-        btn.onclick = () => startRebind(action);
-        row.appendChild(label);
-        row.appendChild(keyDisplay);
-        row.appendChild(btn);
-        controls.appendChild(row);
+
+    const gameplayTitle = document.createElement("div");
+    gameplayTitle.className = "controls-section-title";
+    gameplayTitle.textContent = "Gameplay";
+    controls.appendChild(gameplayTitle);
+    for (const action of GAMEPLAY_ACTIONS) {
+        controls.appendChild(renderControlRow(action));
+    }
+
+    const debugTitle = document.createElement("div");
+    debugTitle.className = "controls-section-title";
+    debugTitle.textContent = "Debug";
+    controls.appendChild(debugTitle);
+    for (const action of DEBUG_ACTIONS) {
+        controls.appendChild(renderControlRow(action));
     }
 }
 
@@ -1276,21 +1303,20 @@ function startRebind(action) {
     const handler = (e) => {
         e.preventDefault();
         if (e.code === "Escape") {
-            waitingForRebindAction = null;
-            document.removeEventListener("keydown", handler);
+            cancelRebind(handler);
+            controlsBindings[action] = [];
+            saveKeyBindings(controlsBindings);
             renderControlsList();
             return;
         }
         const key = e.code;
         if (!key) return;
 
-        waitingForRebindAction = null;
-        document.removeEventListener("keydown", handler);
+        cancelRebind(handler);
 
         if (key === "ControlLeft" || key === "ControlRight") {
             const proceed = confirm("Ctrl is not recommended as a binding because we can't prevent browser shortcuts (such as Ctrl+W to close the tab) from taking place.\n\nDo you want to use Ctrl anyway?");
 
-            document.removeEventListener("keydown", handler);
             if (!proceed) {
                 renderControlsList();
                 return;
@@ -1300,7 +1326,18 @@ function startRebind(action) {
         saveKeyBindings(controlsBindings);
         renderControlsList();
     };
+    rebindKeydownHandler = handler;
     document.addEventListener("keydown", handler, { once: true });
+}
+
+function cancelRebind(handler) {
+    if (handler) {
+        document.removeEventListener("keydown", handler);
+    }
+    if (rebindKeydownHandler === handler) {
+        rebindKeydownHandler = null;
+    }
+    waitingForRebindAction = null;
 }
 
 function resetControlsToDefault() {
