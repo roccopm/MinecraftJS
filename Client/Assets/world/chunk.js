@@ -4,7 +4,7 @@ class Chunk {
         width = 8,
         biome = OverworldBiomes.Plains,
         previousChunk = null,
-        generated = false,
+        generated = false
     ) {
         this.biome = biome;
         this.previousChunk = previousChunk;
@@ -41,6 +41,8 @@ class Chunk {
 
                 this.blocks[y][x].transform.position.x = worldX + this.x;
                 this.blocks[y][x].transform.position.y = worldY;
+                this.walls[y][x].transform.position.x = worldX + this.x;
+                this.walls[y][x].transform.position.y = worldY;
             }
         }
     }
@@ -82,7 +84,7 @@ class Chunk {
             this.setBlockTypeAtPosition(
                 i,
                 (CHUNK_HEIGHT / 2) * BLOCK_SIZE,
-                Blocks.GrassBlock,
+                Blocks.GrassBlock
             );
         }
         // Dirt layers 2 thick
@@ -109,7 +111,7 @@ class Chunk {
             ]),
             -BLOCK_SIZE * 3,
             (CHUNK_HEIGHT / 2) * BLOCK_SIZE + BLOCK_SIZE,
-            this,
+            this
         );
 
         // Tree
@@ -166,7 +168,7 @@ class Chunk {
                 const leftVal = leftChunk.biome.heightNoise.getNoise(
                     worldX,
                     offset,
-                    scale,
+                    scale
                 );
                 return lerpEaseInOut(leftVal, currentVal, 1 - leftBlend);
             }
@@ -174,7 +176,7 @@ class Chunk {
                 const rightVal = rightChunk.biome.heightNoise.getNoise(
                     worldX,
                     offset,
-                    scale,
+                    scale
                 );
                 return lerpEaseInOut(currentVal, rightVal, rightBlend);
             }
@@ -195,13 +197,13 @@ class Chunk {
             blendedMin = lerpEaseInOut(
                 leftChunk.biome.heightNoise.min,
                 currentMin,
-                1 - leftBlend,
+                1 - leftBlend
             );
         } else if (rightBlend > 0 && rightChunk) {
             blendedMin = lerpEaseInOut(
                 currentMin,
                 rightChunk.biome.heightNoise.min,
-                rightBlend,
+                rightBlend
             );
         }
 
@@ -225,7 +227,7 @@ class Chunk {
                             block.y,
                             block.blockType,
                             block.metaData,
-                            block.wall,
+                            block.wall
                         );
                     }
                 });
@@ -353,7 +355,7 @@ class Chunk {
             const entity = summonEntity(
                 Entities[randomEntity],
                 new Vector2(randomX * BLOCK_SIZE + this.x, 0),
-                { myChunkX: this.x },
+                { myChunkX: this.x }
             );
 
             this.entities.push(entity);
@@ -454,7 +456,7 @@ class Chunk {
             i += BLOCK_SIZE
         ) {
             const noiseOutput = getDimension(
-                this.dimension,
+                this.dimension
             ).noiseMaps.tree.getNoise(i);
             if (noiseOutput >= this.biome.treeThreshold) {
                 this.spawnTree(this.getLocalX(i, this));
@@ -468,7 +470,7 @@ class Chunk {
         for (let x = 0; x < CHUNK_WIDTH; x++) {
             if (
                 getDimension(this.dimension).noiseMaps.grass.getNoise(
-                    this.getWorldX(x),
+                    this.getWorldX(x)
                 ) >= 1
             ) {
                 const y = this.findGroundLevel(x, false, true);
@@ -514,7 +516,7 @@ class Chunk {
         for (let y = 0; y < CHUNK_HEIGHT; y++) {
             for (let x = 0; x < CHUNK_WIDTH; x++) {
                 const noiseValue = getDimension(
-                    this.dimension,
+                    this.dimension
                 ).noiseMaps.cave.getNoise(x + this.x / BLOCK_SIZE, y);
 
                 let dynamicThreshold = CAVES_THRESHOLD;
@@ -554,7 +556,7 @@ class Chunk {
                 ore.threshold,
                 ore.block,
                 offset,
-                depth,
+                depth
             ); // Generate ores
         });
     }
@@ -564,7 +566,7 @@ class Chunk {
             for (let x = 0; x < CHUNK_WIDTH; x++) {
                 const noiseValue = noise.getNoise(
                     x + this.x / BLOCK_SIZE,
-                    y + offset,
+                    y + offset
                 );
 
                 if (this.getBlockType(x, y) != this.biome.baseBlock) continue;
@@ -631,7 +633,7 @@ class Chunk {
 
                     const blockAtPos = GetBlockAtWorldPosition(
                         worldX,
-                        CHUNK_HEIGHT * BLOCK_SIZE - worldY - BLOCK_SIZE,
+                        CHUNK_HEIGHT * BLOCK_SIZE - worldY - BLOCK_SIZE
                     );
 
                     if (blockAtPos)
@@ -650,13 +652,13 @@ class Chunk {
         worldY,
         blockType,
         metaData = null,
-        wall = false,
+        wall = false
     ) {
         const chunkWidthPixels = CHUNK_WIDTH * BLOCK_SIZE;
         const targetChunkX =
             Math.floor(worldX / chunkWidthPixels) * chunkWidthPixels;
         const targetChunk = getDimension(this.dimension).chunks.get(
-            targetChunkX,
+            targetChunkX
         );
 
         if (targetChunk && worldY < targetChunk.height * BLOCK_SIZE) {
@@ -672,7 +674,7 @@ class Chunk {
                 this.dimension,
                 metaData,
                 wall,
-                false,
+                false
             );
         }
     }
@@ -743,7 +745,7 @@ class Chunk {
         metaData = null,
         calculate = true,
         updateBlocks = false,
-        makeLinks = true,
+        makeLinks = true
     ) {
         // Check if blockType is a valid int
         if (typeof blockType !== "number") blockType = Blocks.Air;
@@ -780,13 +782,13 @@ class Chunk {
                         worldY,
                         extendedBlock.blockId,
                         metaData,
-                        wall,
+                        wall
                     );
                     continue;
                 }
 
                 const localX = Math.floor(
-                    (worldX - targetChunk.x) / BLOCK_SIZE,
+                    (worldX - targetChunk.x) / BLOCK_SIZE
                 );
                 const localY = Math.floor(worldY / BLOCK_SIZE);
 
@@ -801,7 +803,7 @@ class Chunk {
                         worldY,
                         extendedBlock.blockId,
                         metaData,
-                        wall,
+                        wall
                     );
                     continue;
                 }
@@ -810,7 +812,7 @@ class Chunk {
                     localX,
                     localY,
                     false,
-                    wall,
+                    wall
                 );
                 const blockAtPosDef = blockAtPos
                     ? GetBlock(blockAtPos.blockType)
@@ -844,7 +846,7 @@ class Chunk {
                         worldY,
                         extendedBlock.blockId,
                         metaData,
-                        wall,
+                        wall
                     );
                     linkedBlocks.push({
                         x: worldX,
@@ -855,7 +857,7 @@ class Chunk {
                 }
 
                 const localX = Math.floor(
-                    (worldX - targetChunk.x) / BLOCK_SIZE,
+                    (worldX - targetChunk.x) / BLOCK_SIZE
                 );
                 const localY = Math.floor(worldY / BLOCK_SIZE);
 
@@ -863,7 +865,7 @@ class Chunk {
                     localX,
                     localY,
                     false,
-                    wall,
+                    wall
                 );
 
                 // Skip placing if the block is already the correct type (avoids duplicates during loading)
@@ -884,13 +886,13 @@ class Chunk {
                     extendedBlock.blockId,
                     wall,
                     metaData,
-                    false,
+                    false
                 );
                 const extendedBlockRef = targetChunk.getBlock(
                     localX,
                     localY,
                     false,
-                    wall,
+                    wall
                 );
                 extendedBlockRefs.push(extendedBlockRef);
                 linkedBlocks.push({
@@ -1037,7 +1039,7 @@ class Chunk {
                 startY += BLOCK_SIZE
             ) {
                 console.log(
-                    `Checking frame at start position (${startX}, ${startY}) for size ${innerWidth}x${innerHeight}`,
+                    `Checking frame at start position (${startX}, ${startY}) for size ${innerWidth}x${innerHeight}`
                 );
 
                 // Validate frame (obsidian borders, allowing the broken obsidian position to be non-obsidian)
@@ -1052,7 +1054,7 @@ class Chunk {
                     const topBlock = GetBlockAtWorldPosition(wx, startY);
                     const bottomBlock = GetBlockAtWorldPosition(
                         wx,
-                        startY + innerHeightPx + BLOCK_SIZE,
+                        startY + innerHeightPx + BLOCK_SIZE
                     );
                     // Allow the broken obsidian position to be non-obsidian
                     const isBrokenTop = wx === worldX && startY === worldY;
@@ -1061,7 +1063,7 @@ class Chunk {
                         startY + innerHeightPx + BLOCK_SIZE === worldY;
                     if (!topBlock) {
                         console.log(
-                            `Invalid frame: Null block at top (${wx}, ${startY})`,
+                            `Invalid frame: Null block at top (${wx}, ${startY})`
                         );
                         isValidFrame = false;
                         break;
@@ -1070,7 +1072,7 @@ class Chunk {
                         console.log(
                             `Invalid frame: Null block at bottom (${wx}, ${
                                 startY + innerHeightPx + BLOCK_SIZE
-                            })`,
+                            })`
                         );
                         isValidFrame = false;
                         break;
@@ -1080,7 +1082,7 @@ class Chunk {
                         topBlock.blockType !== Blocks.Obsidian
                     ) {
                         console.log(
-                            `Invalid frame: Top block at (${wx}, ${startY}) is ${topBlock.blockType}, expected Obsidian`,
+                            `Invalid frame: Top block at (${wx}, ${startY}) is ${topBlock.blockType}, expected Obsidian`
                         );
                         isValidFrame = false;
                         break;
@@ -1092,7 +1094,7 @@ class Chunk {
                         console.log(
                             `Invalid frame: Bottom block at (${wx}, ${
                                 startY + innerHeightPx + BLOCK_SIZE
-                            }) is ${bottomBlock.blockType}, expected Obsidian`,
+                            }) is ${bottomBlock.blockType}, expected Obsidian`
                         );
                         isValidFrame = false;
                         break;
@@ -1109,7 +1111,7 @@ class Chunk {
                         const leftBlock = GetBlockAtWorldPosition(startX, wy);
                         const rightBlock = GetBlockAtWorldPosition(
                             startX + innerWidthPx + BLOCK_SIZE,
-                            wy,
+                            wy
                         );
                         const isBrokenLeft = startX === worldX && wy === worldY;
                         const isBrokenRight =
@@ -1117,7 +1119,7 @@ class Chunk {
                             wy === worldY;
                         if (!leftBlock) {
                             console.log(
-                                `Invalid frame: Null block at left (${startX}, ${wy})`,
+                                `Invalid frame: Null block at left (${startX}, ${wy})`
                             );
                             isValidFrame = false;
                             break;
@@ -1126,7 +1128,7 @@ class Chunk {
                             console.log(
                                 `Invalid frame: Null block at right (${
                                     startX + innerWidthPx + BLOCK_SIZE
-                                }, ${wy})`,
+                                }, ${wy})`
                             );
                             isValidFrame = false;
                             break;
@@ -1136,7 +1138,7 @@ class Chunk {
                             leftBlock.blockType !== Blocks.Obsidian
                         ) {
                             console.log(
-                                `Invalid frame: Left block at (${startX}, ${wy}) is ${leftBlock.blockType}, expected Obsidian`,
+                                `Invalid frame: Left block at (${startX}, ${wy}) is ${leftBlock.blockType}, expected Obsidian`
                             );
                             isValidFrame = false;
                             break;
@@ -1148,7 +1150,9 @@ class Chunk {
                             console.log(
                                 `Invalid frame: Right block at (${
                                     startX + innerWidthPx + BLOCK_SIZE
-                                }, ${wy}) is ${rightBlock.blockType}, expected Obsidian`,
+                                }, ${wy}) is ${
+                                    rightBlock.blockType
+                                }, expected Obsidian`
                             );
                             isValidFrame = false;
                             break;
@@ -1173,7 +1177,7 @@ class Chunk {
                         const block = GetBlockAtWorldPosition(wx, wy);
                         if (!block) {
                             console.log(
-                                `Invalid inner area: Null block at (${wx}, ${wy})`,
+                                `Invalid inner area: Null block at (${wx}, ${wy})`
                             );
                             return null; // Null block invalidates the frame
                         }
@@ -1184,7 +1188,7 @@ class Chunk {
                             block.blockType !== Blocks.Fire
                         ) {
                             console.log(
-                                `Invalid inner area: Block at (${wx}, ${wy}) is ${block.blockType}, expected NetherPortal, Air, or Fire`,
+                                `Invalid inner area: Block at (${wx}, ${wy}) is ${block.blockType}, expected NetherPortal, Air, or Fire`
                             );
                             return null; // Non-portal/air/fire block invalidates the frame
                         }
@@ -1193,13 +1197,13 @@ class Chunk {
 
                 if (!hasPortalBlock) {
                     console.log(
-                        `Invalid inner area: No NetherPortal blocks found in frame at (${startX}, ${startY})`,
+                        `Invalid inner area: No NetherPortal blocks found in frame at (${startX}, ${startY})`
                     );
                     continue;
                 }
 
                 console.log(
-                    `Valid portal frame found at (${startX}, ${startY}), size: ${innerWidth}x${innerHeight}`,
+                    `Valid portal frame found at (${startX}, ${startY}), size: ${innerWidth}x${innerHeight}`
                 );
                 // Return inner area bounds for breaking portal blocks
                 return {
@@ -1212,7 +1216,7 @@ class Chunk {
         }
 
         console.log(
-            `No valid portal frame found for size ${innerWidth}x${innerHeight}`,
+            `No valid portal frame found for size ${innerWidth}x${innerHeight}`
         );
         return null;
     }
@@ -1251,7 +1255,7 @@ class Chunk {
                     worldX,
                     worldY,
                     innerWidth,
-                    innerHeight,
+                    innerHeight
                 );
                 if (portalFound) {
                     // Light the portal by setting inner air/fire blocks to NetherPortal
@@ -1271,7 +1275,7 @@ class Chunk {
                                         false,
                                         activeDimension,
                                         null,
-                                        false,
+                                        false
                                     );
                                 }
                             }
@@ -1280,7 +1284,7 @@ class Chunk {
                     // Play portal sound effect
                     playPositionalSound(
                         new Vector2(worldX, worldY),
-                        "portal/trigger.ogg",
+                        "portal/trigger.ogg"
                     );
 
                     return; // Exit after lighting the first valid portal
@@ -1353,7 +1357,7 @@ class Chunk {
                     const topBlock = GetBlockAtWorldPosition(wx, startY);
                     const bottomBlock = GetBlockAtWorldPosition(
                         wx,
-                        startY + innerHeightPx + BLOCK_SIZE,
+                        startY + innerHeightPx + BLOCK_SIZE
                     );
                     if (!topBlock) {
                         isValidFrame = false;
@@ -1383,7 +1387,7 @@ class Chunk {
                         const leftBlock = GetBlockAtWorldPosition(startX, wy);
                         const rightBlock = GetBlockAtWorldPosition(
                             startX + innerWidthPx + BLOCK_SIZE,
-                            wy,
+                            wy
                         );
                         if (!leftBlock) {
                             isValidFrame = false;
@@ -1516,7 +1520,7 @@ class Chunk {
                 for (let x = 0; x < this.width; x++) {
                     const block = this.blocks[y][x];
                     block.lightLevel = getDimension(
-                        this.dimension,
+                        this.dimension
                     ).baseLightLevel;
                 }
             }
@@ -1621,7 +1625,7 @@ class Chunk {
                 if (
                     !camera.isInScreen(
                         new Vector2(worldX + this.x, worldY),
-                        new Vector2(BLOCK_SIZE, BLOCK_SIZE),
+                        new Vector2(BLOCK_SIZE, BLOCK_SIZE)
                     )
                 )
                     continue;
