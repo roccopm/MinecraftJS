@@ -8,7 +8,13 @@ function getFirstConnectedGamepad() {
 }
 
 function _gamepadBtn(gp, i) {
-    return !!(gp && gp.buttons[i] && (typeof gp.buttons[i] === "object" ? gp.buttons[i].value > 0.5 : gp.buttons[i]));
+    return !!(
+        gp &&
+        gp.buttons[i] &&
+        (typeof gp.buttons[i] === "object"
+            ? gp.buttons[i].value > 0.5
+            : gp.buttons[i])
+    );
 }
 
 class MenuGamepadNavigator {
@@ -17,6 +23,7 @@ class MenuGamepadNavigator {
         this.getBackAction = getBackAction;
         this.getIsRebinding = getIsRebinding;
         this.throttleMs = 180;
+        this.navHoldDelayMs = 500; // after this many ms holding a direction, start repeating
         this.axisThreshold = 0.4;
         this.sliderStepMs = 80;
         this.sliderMaxSpeed = 12;
@@ -31,6 +38,8 @@ class MenuGamepadNavigator {
         this.sliderSpeed = 0;
         this.sliderLastStepTime = 0;
         this.sliderWasAdjusting = false;
+        this.navHoldStartTime = 0;
+        this.navHoldDirection = null; // 'up' | 'down' | null
     }
 
     _nextFocusIndex(focusables, currentIdx, direction) {
@@ -53,7 +62,10 @@ class MenuGamepadNavigator {
     }
 
     _ensureFocusable(el) {
-        if (el.tabIndex === -1 || (el.getAttribute && !el.hasAttribute("tabindex"))) {
+        if (
+            el.tabIndex === -1 ||
+            (el.getAttribute && !el.hasAttribute("tabindex"))
+        ) {
             el.setAttribute("tabindex", "0");
         }
     }
@@ -84,16 +96,21 @@ class MenuGamepadNavigator {
         }
 
         focusables.forEach((el) => el.classList.remove("menu-focused"));
-        if (document.activeElement && focusables.includes(document.activeElement)) {
+        if (
+            document.activeElement &&
+            focusables.includes(document.activeElement)
+        ) {
             document.activeElement.classList.add("menu-focused");
         }
 
         const now = Date.now();
-        const dt = this.lastFrameTime > 0 ? (now - this.lastFrameTime) / 1000 : 0;
+        const dt =
+            this.lastFrameTime > 0 ? (now - this.lastFrameTime) / 1000 : 0;
         this.lastFrameTime = now;
         const throttleOk = now - this.lastMoveTime >= this.throttleMs;
 
-        const ax = (i) => (gp && gp.connected && gp.axes[i] != null ? gp.axes[i] : 0);
+        const ax = (i) =>
+            gp && gp.connected && gp.axes[i] != null ? gp.axes[i] : 0;
         const axis0 = ax(0);
         const axis1 = ax(1);
         const axis6 = ax(6);
@@ -106,8 +123,16 @@ class MenuGamepadNavigator {
         const down = axis1 > this.axisThreshold || dpadDown;
         const left = axis0 < -this.axisThreshold || dpadLeft;
         const right = axis0 > this.axisThreshold || dpadRight;
-        const prevUp = this.lastAxis[1] < -this.axisThreshold || (this.lastAxis[3] != null && this.lastAxis[3] < -this.axisThreshold) || this.lastBtn12;
-        const prevDown = this.lastAxis[1] > this.axisThreshold || (this.lastAxis[3] != null && this.lastAxis[3] > this.axisThreshold) || this.lastBtn13;
+        const prevUp =
+            this.lastAxis[1] < -this.axisThreshold ||
+            (this.lastAxis[3] != null &&
+                this.lastAxis[3] < -this.axisThreshold) ||
+            this.lastBtn12;
+        const prevDown =
+            this.lastAxis[1] > this.axisThreshold ||
+            (this.lastAxis[3] != null &&
+                this.lastAxis[3] > this.axisThreshold) ||
+            this.lastBtn13;
         this.lastAxis[0] = axis0;
         this.lastAxis[1] = axis1;
         this.lastAxis[2] = axis6;
@@ -118,6 +143,7 @@ class MenuGamepadNavigator {
         if (!gp || !gp.connected || rebinding) {
             this.lastA = false;
             this.lastB = false;
+            this.navHoldDirection = null;
             this.rafId = requestAnimationFrame(scheduleNext);
             return;
         }
@@ -127,6 +153,8 @@ class MenuGamepadNavigator {
             const idx = this._firstEnabled(focusables);
             if (idx >= 0) focusables[idx].focus();
         }
+
+        if (!up && !down) this.navHoldDirection = null;
 
         const active = document.activeElement;
         if (active && active.type === "range" && focusables.includes(active)) {
@@ -141,18 +169,29 @@ class MenuGamepadNavigator {
                 this.sliderSpeed = 0;
                 this.sliderLastStepTime = 0;
                 this.sliderWasAdjusting = false;
-                if (wasAdjusting) active.dispatchEvent(new Event("change", { bubbles: true }));
+                if (wasAdjusting)
+                    active.dispatchEvent(
+                        new Event("change", { bubbles: true }),
+                    );
             } else {
                 const dir = goingRight ? 1 : -1;
-                if (this.sliderLastStepTime === 0) this.sliderLastStepTime = now;
+                if (this.sliderLastStepTime === 0)
+                    this.sliderLastStepTime = now;
                 if (now - this.sliderLastStepTime >= this.sliderStepMs) {
-                    this.sliderSpeed = Math.min(this.sliderMaxSpeed, this.sliderSpeed + 1);
+                    this.sliderSpeed = Math.min(
+                        this.sliderMaxSpeed,
+                        this.sliderSpeed + 1,
+                    );
                     let val = parseFloat(active.value) || min;
-                    val = Math.max(min, Math.min(max, val + this.sliderSpeed * step * dir));
+                    val = Math.max(
+                        min,
+                        Math.min(max, val + this.sliderSpeed * step * dir),
+                    );
                     active.value = String(val);
                     active.dispatchEvent(new Event("input", { bubbles: true }));
                     this.sliderLastStepTime += this.sliderStepMs;
-                    if (this.sliderLastStepTime > now) this.sliderLastStepTime = now;
+                    if (this.sliderLastStepTime > now)
+                        this.sliderLastStepTime = now;
                 }
                 this.sliderWasAdjusting = true;
             }
@@ -162,16 +201,51 @@ class MenuGamepadNavigator {
             this.sliderWasAdjusting = false;
         }
 
-        if (throttleOk && (up && !prevUp)) {
+        const navRepeatOk =
+            this.navHoldDirection != null &&
+            now - this.navHoldStartTime >= this.navHoldDelayMs &&
+            now - this.lastMoveTime >= this.throttleMs;
+
+        if (throttleOk && up && !prevUp) {
+            this.navHoldStartTime = now;
+            this.navHoldDirection = "up";
             const idx = focusables.indexOf(document.activeElement);
-            const nextIdx = idx < 0 ? this._firstEnabled(focusables) : this._nextFocusIndex(focusables, idx, -1);
+            const nextIdx =
+                idx < 0
+                    ? this._firstEnabled(focusables)
+                    : this._nextFocusIndex(focusables, idx, -1);
             if (nextIdx >= 0 && nextIdx !== idx) {
                 focusables[nextIdx].focus();
                 this.lastMoveTime = now;
             }
-        } else if (throttleOk && (down && !prevDown)) {
+        } else if (throttleOk && down && !prevDown) {
+            this.navHoldStartTime = now;
+            this.navHoldDirection = "down";
             const idx = focusables.indexOf(document.activeElement);
-            const nextIdx = idx < 0 ? this._firstEnabled(focusables) : this._nextFocusIndex(focusables, idx, 1);
+            const nextIdx =
+                idx < 0
+                    ? this._firstEnabled(focusables)
+                    : this._nextFocusIndex(focusables, idx, 1);
+            if (nextIdx >= 0 && nextIdx !== idx) {
+                focusables[nextIdx].focus();
+                this.lastMoveTime = now;
+            }
+        } else if (navRepeatOk && this.navHoldDirection === "up" && up) {
+            const idx = focusables.indexOf(document.activeElement);
+            const nextIdx =
+                idx < 0
+                    ? this._firstEnabled(focusables)
+                    : this._nextFocusIndex(focusables, idx, -1);
+            if (nextIdx >= 0 && nextIdx !== idx) {
+                focusables[nextIdx].focus();
+                this.lastMoveTime = now;
+            }
+        } else if (navRepeatOk && this.navHoldDirection === "down" && down) {
+            const idx = focusables.indexOf(document.activeElement);
+            const nextIdx =
+                idx < 0
+                    ? this._firstEnabled(focusables)
+                    : this._nextFocusIndex(focusables, idx, 1);
             if (nextIdx >= 0 && nextIdx !== idx) {
                 focusables[nextIdx].focus();
                 this.lastMoveTime = now;
@@ -180,7 +254,13 @@ class MenuGamepadNavigator {
 
         const aPressed = _gamepadBtn(gp, 0);
         const bPressed = _gamepadBtn(gp, 1);
-        if (aPressed && !this.lastA && document.activeElement && focusables.includes(document.activeElement) && !document.activeElement.disabled) {
+        if (
+            aPressed &&
+            !this.lastA &&
+            document.activeElement &&
+            focusables.includes(document.activeElement) &&
+            !document.activeElement.disabled
+        ) {
             document.activeElement.click();
         }
         if (bPressed && !this.lastB) {
