@@ -36,7 +36,7 @@ class Snowball extends Projectile {
         });
         emitter.emitAndDie();
 
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Break_Snow,
             volume: 0.5,
             range: 10,

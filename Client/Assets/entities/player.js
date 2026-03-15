@@ -165,7 +165,7 @@ class Player extends Entity {
         this.clampFoodStats();
     }
 
-    canEatFood(item = GetItem(this.holdItem?.itemId)) {
+    canEatFood(item = getItem(this.holdItem?.itemId)) {
         if (!this.abilities.hasHealth) return false;
         if (!item) return false;
 
@@ -177,7 +177,8 @@ class Player extends Entity {
         if (this.abilities.flying) return;
 
         const isMovingHorizontally =
-            (input.isActionDown("moveLeft") || input.isActionDown("moveRight")) &&
+            (input.isActionDown("moveLeft") ||
+                input.isActionDown("moveRight")) &&
             this.velocity.x !== 0;
         const isPressingUp =
             (input.isActionDown("jump") || input.isActionDown("moveUp")) &&
@@ -230,7 +231,7 @@ class Player extends Entity {
                     this.addFoodExhaustion(6);
                 } else {
                     this.forceDamage(1);
-                    PlayRandomSoundFromArray({
+                    playRandomSoundFromArray({
                         array: Sounds.Player_Hurt,
                         positional: true,
                         origin: this.position,
@@ -429,7 +430,7 @@ class Player extends Entity {
         if (this.invulnerable) return;
         this.knockBack(hitfromX, kb);
 
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Player_Hurt,
             positional: true,
             origin: this.position,
@@ -449,7 +450,7 @@ class Player extends Entity {
     useItemInHand() {
         if (!this.holdItem.itemId) return;
 
-        const item = GetItem(this.holdItem.itemId);
+        const item = getItem(this.holdItem.itemId);
 
         if (!item) return;
 
@@ -486,7 +487,7 @@ class Player extends Entity {
     useFlame() {
         if (!this.hoverBlock) return;
 
-        const block = GetBlock(this.hoverBlock.blockType);
+        const block = getBlock(this.hoverBlock.blockType);
 
         if (this.hoverBlock.blockType === Blocks.TNT) {
             this.hoverBlock.explode();
@@ -495,7 +496,7 @@ class Player extends Entity {
         }
 
         // Check if block is placeable
-        if (!this.checkBlockForPlacing(GetBlock(Blocks.Fire))) return;
+        if (!this.checkBlockForPlacing(getBlock(Blocks.Fire))) return;
 
         // Check if block is air
         if (!block.air) return;
@@ -505,7 +506,7 @@ class Player extends Entity {
 
         playPositionalSound(this.position, "items/ignite.ogg", 10);
 
-        ServerPlaceBlock(
+        serverPlaceBlock(
             getChunkXForWorldX(this.hoverBlock.transform.position.x),
             this.hoverBlock.x,
             this.hoverBlock.y,
@@ -527,26 +528,26 @@ class Player extends Entity {
     useHoe() {
         if (!this.hoverBlock) return;
 
-        const block = GetBlock(this.hoverBlock.blockType);
+        const block = getBlock(this.hoverBlock.blockType);
 
         if (!block.hoeAble) return;
 
-        const blockAbove = GetBlockAtWorldPosition(
+        const blockAbove = getBlockAtWorldPosition(
             this.hoverBlock.transform.position.x,
             this.hoverBlock.transform.position.y - BLOCK_SIZE,
         );
 
-        if (blockAbove && !GetBlock(blockAbove.blockType).air) return;
+        if (blockAbove && !getBlock(blockAbove.blockType).air) return;
 
         this.playerSwing();
 
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Break_Gravel,
             positional: true,
             origin: this.position,
         });
 
-        ServerPlaceBlock(
+        serverPlaceBlock(
             getChunkXForWorldX(this.hoverBlock.transform.position.x),
             this.hoverBlock.x,
             this.hoverBlock.y,
@@ -585,12 +586,12 @@ class Player extends Entity {
 
     useBucket() {
         if (!this.hoverBlock) return;
-        const block = GetBlock(this.hoverBlock.blockType);
+        const block = getBlock(this.hoverBlock.blockType);
 
         // Placing
         if (block.air || block.fluid) {
             if (this.holdItem.itemId === Items.WaterBucket) {
-                if (!this.checkBlockForPlacing(GetBlock(Blocks.Water))) return;
+                if (!this.checkBlockForPlacing(getBlock(Blocks.Water))) return;
 
                 this.removeFromCurrentSlot();
                 this.inventory.addItem(
@@ -599,7 +600,7 @@ class Player extends Entity {
                 this.hoverBlock.setBlockType(Blocks.Water, true);
                 // setBlockType(this.hoverBlock, Blocks.Water);
 
-                ServerPlaceBlock(
+                serverPlaceBlock(
                     getChunkXForWorldX(this.hoverBlock.transform.position.x),
                     this.hoverBlock.x,
                     this.hoverBlock.y,
@@ -620,7 +621,7 @@ class Player extends Entity {
                 );
                 this.hoverBlock.setBlockType(Blocks.Lava, true);
 
-                ServerPlaceBlock(
+                serverPlaceBlock(
                     getChunkXForWorldX(this.hoverBlock.transform.position.x),
                     this.hoverBlock.x,
                     this.hoverBlock.y,
@@ -654,7 +655,7 @@ class Player extends Entity {
 
                 if (!chunk) return;
 
-                ServerPlaceBlock(
+                serverPlaceBlock(
                     chunk.x,
                     this.hoverBlock.x,
                     this.hoverBlock.y,
@@ -663,13 +664,12 @@ class Player extends Entity {
                     activeDimension,
                 );
 
-                chunk.setBlockType(
+                chunk.setBlockTypeLocal(
                     this.hoverBlock.x,
                     this.hoverBlock.y,
                     Blocks.Air,
                     false,
                     null,
-                    false,
                 );
             }
 
@@ -689,7 +689,7 @@ class Player extends Entity {
 
                 if (!chunk) return;
 
-                ServerPlaceBlock(
+                serverPlaceBlock(
                     chunk.x,
                     this.hoverBlock.x,
                     this.hoverBlock.y,
@@ -698,13 +698,12 @@ class Player extends Entity {
                     activeDimension,
                 );
 
-                chunk.setBlockType(
+                chunk.setBlockTypeLocal(
                     this.hoverBlock.x,
                     this.hoverBlock.y,
                     Blocks.Air,
                     false,
                     null,
-                    false,
                 );
             }
             // playPositionalSound(this.position, "items/bucket_fill.ogg");
@@ -714,7 +713,7 @@ class Player extends Entity {
     processEating() {
         if (!this.eating) return;
 
-        const item = GetItem(this.holdItem.itemId);
+        const item = getItem(this.holdItem.itemId);
         if (!this.canEatFood(item)) {
             this.eating = false;
             this.eatTimer = 0;
@@ -730,7 +729,7 @@ class Player extends Entity {
         this.eatTimer += deltaTime;
 
         if (this.eatTimer % 0.2 < deltaTime) {
-            PlayRandomSoundFromArray({
+            playRandomSoundFromArray({
                 array: Sounds.Player_Eat,
                 positional: true,
                 origin: this.position,
@@ -759,7 +758,7 @@ class Player extends Entity {
 
     eatFoodInHand() {
         // This method is no longer needed directly but keeping it for compatibility
-        const item = GetItem(this.holdItem.itemId);
+        const item = getItem(this.holdItem.itemId);
         if (!this.canEatFood(item)) return;
         this.eating = true;
         this.eatTimer = 0;
@@ -785,7 +784,7 @@ class Player extends Entity {
     dieEvent() {
         chat.message("Player has died.");
 
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Player_Hurt,
             positional: true,
             origin: this.position,
@@ -808,11 +807,7 @@ class Player extends Entity {
     }
 
     teleport(position) {
-        const newPosition = new Vector2(
-            position.x,
-            -position.y + CHUNK_HEIGHT * BLOCK_SIZE,
-        );
-        this.position = newPosition;
+        this.position = new Vector2(position.x, position.y);
     }
 
     interactLogic() {
@@ -827,7 +822,7 @@ class Player extends Entity {
 
         if (!this.hoverBlock) return;
 
-        const block = GetBlock(this.hoverBlock.blockType);
+        const block = getBlock(this.hoverBlock.blockType);
 
         if (input.isActionPressed("pickBlock")) {
             this.handleQuickBlockSelect(block);
@@ -986,7 +981,7 @@ class Player extends Entity {
             this.inventory.interactedBlock.metaData
         ) {
             switch (
-                GetBlock(this.inventory.interactedBlock.blockType).specialType
+                getBlock(this.inventory.interactedBlock.blockType).specialType
             ) {
                 case SpecialType.SingleChest:
                     playPositionalSound(
@@ -1066,7 +1061,7 @@ class Player extends Entity {
         summonEntity(
             Drop,
             new Vector2(
-                this.position.x + RandomRange(0, BLOCK_SIZE / 3),
+                this.position.x + randomRange(0, BLOCK_SIZE / 3),
                 this.position.y,
             ),
             {
@@ -1116,7 +1111,7 @@ class Player extends Entity {
 
         if (!this.hoverBlock) return;
 
-        if (input.isActionDown("attack"))
+        if (input.isActionDown("attack")) {
             if (
                 this.inventory.selectedItem &&
                 this.inventory.selectedItem.toolType === ToolType.Hammer
@@ -1125,7 +1120,7 @@ class Player extends Entity {
             } else {
                 this.breakingLogic(this.hoverBlock);
             }
-        else {
+        } else {
             this.resetBreaking();
         }
         if (input.isActionDown("place")) this.placingLogic();
@@ -1174,7 +1169,7 @@ class Player extends Entity {
         if (entity.health) {
             let reduceDurabilityBy = 1;
 
-            switch (GetItem(this.holdItem.itemId)?.toolType) {
+            switch (getItem(this.holdItem.itemId)?.toolType) {
                 case ToolType.Axe:
                     reduceDurabilityBy = 2;
                     break;
@@ -1203,7 +1198,7 @@ class Player extends Entity {
         let damage = 1;
 
         if (this.holdItem.itemId) {
-            damage += GetItem(this.holdItem.itemId).baseDamage;
+            damage += getItem(this.holdItem.itemId).baseDamage;
         }
 
         return damage;
@@ -1216,7 +1211,7 @@ class Player extends Entity {
 
         if (!chunk) return;
 
-        if (!GetBlock(this.hoverWall.blockType).air) return false;
+        if (!getBlock(this.hoverWall.blockType).air) return false;
 
         const mousePos = new Vector2(
             input.getMousePositionOnBlockGrid().x,
@@ -1248,7 +1243,7 @@ class Player extends Entity {
 
         // Determine what block to place based on what's held
         const blockToPlace = selectedItem.placeBlock
-            ? GetBlock(selectedItem.placeBlock)
+            ? getBlock(selectedItem.placeBlock)
             : selectedItem;
 
         // Check if it's a wall item/block
@@ -1271,19 +1266,18 @@ class Player extends Entity {
         );
 
         // Place the block
-        const succeeded = chunk.setBlockType(
+        const succeeded = chunk.setBlockTypeLocal(
             this.hoverBlock.x,
             this.hoverBlock.y,
             blockToPlace.blockId,
             isWall,
             null,
-            false,
             true,
         );
 
         if (!succeeded) return;
 
-        ServerPlaceBlock(
+        serverPlaceBlock(
             chunk.x,
             this.hoverBlock.x,
             this.hoverBlock.y,
@@ -1312,7 +1306,7 @@ class Player extends Entity {
         // Check block beneath for non-wall blocks
         const blockBeneath = getDimensionChunks(activeDimension)
             .get(this.hoverBlock.chunkX)
-            .getBlockTypeData(this.hoverBlock.x, this.hoverBlock.y + 1, false);
+            .getBlockTypeDataLocal(this.hoverBlock.x, this.hoverBlock.y + 1);
 
         if (!blockBeneath || blockBeneath.air) {
             if (
@@ -1342,8 +1336,8 @@ class Player extends Entity {
     }
 
     checkBlockForPlacing(block) {
-        const isAir = GetBlock(this.hoverBlock.blockType).air;
-        const isFluid = GetBlock(this.hoverBlock.blockType).fluid;
+        const isAir = getBlock(this.hoverBlock.blockType).air;
+        const isFluid = getBlock(this.hoverBlock.blockType).fluid;
 
         const mousePos = new Vector2(
             input.getMousePositionOnBlockGrid().x,
@@ -1377,7 +1371,7 @@ class Player extends Entity {
 
         const isAdjacentToBlock = checkAdjacentBlocks(mousePos);
 
-        const blockBeneath = GetBlockAtWorldPosition(
+        const blockBeneath = getBlockAtWorldPosition(
             this.hoverBlock.transform.position.x,
             this.hoverBlock.transform.position.y + BLOCK_SIZE,
         );
@@ -1385,7 +1379,7 @@ class Player extends Entity {
         if (block.breakWithoutBlockUnderneath) {
             if (!blockBeneath) return false;
 
-            const blockBeneathDef = GetBlock(blockBeneath.blockType);
+            const blockBeneathDef = getBlock(blockBeneath.blockType);
 
             if (
                 (!blockBeneathDef.collision &&
@@ -1471,14 +1465,13 @@ class Player extends Entity {
     }
 
     breakingLogic(hover, wall = false) {
-        let block = GetBlock(hover.blockType);
+        let block = getBlock(hover.blockType);
 
         if (block.air || block.fluid) return;
 
         if (
             !this.abilities.mayBuild ||
-            GetBlock(hover.blockType).hardness < 0
-            && this.gamemode != 1
+            (getBlock(hover.blockType).hardness < 0 && this.gamemode != 1)
         ) {
             this.resetBreaking();
             return;
@@ -1488,7 +1481,7 @@ class Player extends Entity {
             hover.breakBlock(false, wall);
             this.playerSwing();
 
-            ServerBreakBlock(
+            serverBreakBlock(
                 hover.chunkX,
                 hover.x,
                 hover.y,
@@ -1534,7 +1527,7 @@ class Player extends Entity {
 
         if (this.breakingTime >= this.lastBreakSoundTime + soundInterval) {
             this.lastBreakSoundTime = this.breakingTime;
-            PlayRandomSoundFromArray({
+            playRandomSoundFromArray({
                 array: block.breakingSound,
                 volume: 0.2,
                 positional: true,
@@ -1564,7 +1557,7 @@ class Player extends Entity {
             hover.breakBlock(shouldDrop, isWall);
 
             if (multiplayer) {
-                ServerBreakBlock(
+                serverBreakBlock(
                     hover.chunkX,
                     hover.x,
                     hover.y,
@@ -1577,7 +1570,7 @@ class Player extends Entity {
 
             let reduceDurabilityBy = 1;
 
-            if (GetItem(this.holdItem.itemId)?.toolType === ToolType.Sword)
+            if (getItem(this.holdItem.itemId)?.toolType === ToolType.Sword)
                 reduceDurabilityBy = 2;
 
             if (originalBlockHardness <= 0) reduceDurabilityBy = 0;
@@ -1606,7 +1599,7 @@ class Player extends Entity {
                     "items/break.ogg",
                     10,
                     1,
-                    RandomRange(0.8, 1.2),
+                    randomRange(0.8, 1.2),
                 );
             }
         }
@@ -1671,15 +1664,19 @@ class Player extends Entity {
         }
 
         // Return if no movement keys are pressed
-        if (!input.isActionDown("moveRight") && !input.isActionDown("moveLeft")) return;
+        if (!input.isActionDown("moveRight") && !input.isActionDown("moveLeft"))
+            return;
 
         // Move right or left based on key pressed
-        this.targetVelocity.x = input.isActionDown("moveRight") ? speed : -speed;
+        this.targetVelocity.x = input.isActionDown("moveRight")
+            ? speed
+            : -speed;
     }
 
     handleJump() {
         if (this.swimming || !this.grounded) return; // Only jump if grounded and not swimming
-        if (!(input.isActionDown("jump") || input.isActionDown("moveUp"))) return;
+        if (!(input.isActionDown("jump") || input.isActionDown("moveUp")))
+            return;
 
         // Apply jump force
         this.velocity.y = -this.abilities.jumpForce * BLOCK_SIZE;
@@ -1735,9 +1732,11 @@ class Player extends Entity {
 
         if (input.isActionDown("moveUp") || input.isActionDown("jump"))
             this.velocity.y = -4.7 * BLOCK_SIZE;
-        else if (input.isActionDown("moveDown")) this.velocity.y = 4.7 * BLOCK_SIZE;
+        else if (input.isActionDown("moveDown"))
+            this.velocity.y = 4.7 * BLOCK_SIZE;
 
-        if (!input.isActionDown("moveRight") && !input.isActionDown("moveLeft")) return;
+        if (!input.isActionDown("moveRight") && !input.isActionDown("moveLeft"))
+            return;
 
         this.targetVelocity.x = input.isActionDown("moveRight")
             ? speed * 2.52

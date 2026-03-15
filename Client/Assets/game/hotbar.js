@@ -164,14 +164,14 @@ class Hotbar {
 
     handleSelected() {
         if (this.inventory.items[3][this.currentSlot].item.blockId) {
-            this.inventory.selectedBlock = GetBlock(
+            this.inventory.selectedBlock = getBlock(
                 this.inventory.items[3][this.currentSlot].item.blockId,
             );
         } else {
             this.inventory.selectedBlock = null;
         }
         if (this.inventory.items[3][this.currentSlot].item.itemId != null) {
-            this.inventory.selectedItem = GetItem(
+            this.inventory.selectedItem = getItem(
                 this.inventory.items[3][this.currentSlot].item.itemId,
             );
         } else {

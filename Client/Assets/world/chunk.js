@@ -103,7 +103,7 @@ class Chunk {
         }
 
         // Chest
-        GenerateChestWithLoot(
+        generateChestWithLoot(
             new LootTable([
                 new LootItem({ blockId: Blocks.IceBlock, maxCount: 1 }),
                 new LootItem({ itemId: Items.LavaBucket, maxCount: 1 }),
@@ -304,7 +304,7 @@ class Chunk {
                 const blockType = this.getBlockType(x, y);
 
                 // Place water only if the block is air (empty)
-                if (GetBlock(blockType).air) {
+                if (getBlock(blockType).air) {
                     this.setBlockType(x, y, this.biome.fluidType);
                 }
 
@@ -336,7 +336,7 @@ class Chunk {
         )
             return;
 
-        const count = RandomRange(-this.biome.maxMobs, this.biome.maxMobs);
+        const count = randomRange(-this.biome.maxMobs, this.biome.maxMobs);
 
         if (count <= 0) {
             this.setMobSpawnTime();
@@ -344,12 +344,12 @@ class Chunk {
         }
 
         for (let i = 0; i < count; i++) {
-            const randomX = RandomRange(0, CHUNK_WIDTH);
+            const randomX = randomRange(0, CHUNK_WIDTH);
 
             const randomEntity = passive
-                ? this.biome.mobs[RandomRange(0, this.biome.mobs.length)]
+                ? this.biome.mobs[randomRange(0, this.biome.mobs.length)]
                 : this.biome.googlies[
-                      RandomRange(0, this.biome.googlies.length)
+                      randomRange(0, this.biome.googlies.length)
                   ];
 
             const entity = summonEntity(
@@ -380,7 +380,7 @@ class Chunk {
     setMobSpawnTime() {
         // chat.message("set spawn");
 
-        this.spawnTime = RandomRange(mobSpawnDelay.min, mobSpawnDelay.max);
+        this.spawnTime = randomRange(mobSpawnDelay.min, mobSpawnDelay.max);
     }
 
     updateChunk() {
@@ -388,7 +388,7 @@ class Chunk {
         for (let i = this.update.length - 1; i >= 0; i--) {
             const block = this.update[i];
             // Retrieve the block's updateSpeed from its block data.
-            const speed = GetBlock(block.blockType).updateSpeed || 1;
+            const speed = getBlock(block.blockType).updateSpeed || 1;
 
             // Initialize the accumulator if it doesn't exist.
             if (block._updateAccumulator === undefined) {
@@ -423,7 +423,6 @@ class Chunk {
     }
 
     getUp(x, y) {
-        y = this.calculateY(y);
         return this.getBlock(x, y + 1); // Block above
     }
 
@@ -474,11 +473,12 @@ class Chunk {
                 ) >= 1
             ) {
                 const y = this.findGroundLevel(x, false, true);
-                if (!GetBlock(this.getBlockType(x, y)).air) continue;
+                if (!getBlock(this.getBlockType(x, y)).air) continue;
                 const randomGrass =
                     this.biome.grassType[
-                        RandomRange(0, this.biome.grassType.length)
+                        randomRange(0, this.biome.grassType.length)
                     ];
+
                 this.setBlockType(x, y, randomGrass);
             }
         }
@@ -486,7 +486,7 @@ class Chunk {
 
     spawnTree(x) {
         const y = this.findGroundLevel(x, false, true); // Find valid ground level`
-        if (!GetBlock(this.getBlockType(x, y)).air) return;
+        if (!getBlock(this.getBlockType(x, y)).air) return;
         const randomTree = this.getRandomTreeFromBiome(); // Pick a random tree
         if (!randomTree) return;
         this.spawnTreeAt(randomTree, x, y); // Spawn the tree at the position
@@ -503,8 +503,8 @@ class Chunk {
             ) {
                 if (validGround) continue;
             }
-            if (!GetBlock(blockAtPos).collision) continue;
-            if (correctY) return CHUNK_HEIGHT - y - 1;
+            if (!getBlock(blockAtPos).collision) continue;
+            if (correctY) return y;
             return y + 1;
         }
         return 0;
@@ -587,9 +587,9 @@ class Chunk {
 
     getRandomTreeFromBiome() {
         const trees = this.biome.treeType;
-        const variants = trees[RandomRange(0, trees.length)].variants;
+        const variants = trees[randomRange(0, trees.length)].variants;
 
-        return variants[RandomRange(0, variants.length)];
+        return variants[randomRange(0, variants.length)];
     }
 
     spawnTreeAt(tree, x, y) {
@@ -599,7 +599,7 @@ class Chunk {
         const structure = tree.blocks; // Get the block layout
 
         // Randomly choose to flip (mirroring) the structure.
-        const flip = RandomRange(0, 2) === 1; // flip is true 50% of the time
+        const flip = randomRange(0, 2) === 1; // flip is true 50% of the time
 
         const treeHeight = structure.length;
         const treeWidth = structure[0].length;
@@ -626,18 +626,17 @@ class Chunk {
                     x * BLOCK_SIZE -
                     offsetX +
                     columnIndex * BLOCK_SIZE;
-                const worldY = y * BLOCK_SIZE - offsetY + i * BLOCK_SIZE;
+                const userBlockY = y + i;
+                const worldY =
+                    this.userYToLocalY(userBlockY) * BLOCK_SIZE - offsetY;
 
-                if (GetBlock(block).noPriority) {
+                if (getBlock(block).noPriority) {
                     // Check if there already is a block at this position
 
-                    const blockAtPos = GetBlockAtWorldPosition(
-                        worldX,
-                        CHUNK_HEIGHT * BLOCK_SIZE - worldY - BLOCK_SIZE
-                    );
+                    const blockAtPos = getBlockAtWorldPosition(worldX, worldY);
 
                     if (blockAtPos)
-                        if (!GetBlock(blockAtPos.blockType)?.air) {
+                        if (!getBlock(blockAtPos.blockType)?.air) {
                             continue;
                         }
                 }
@@ -664,7 +663,13 @@ class Chunk {
         if (targetChunk && worldY < targetChunk.height * BLOCK_SIZE) {
             const localX = Math.floor((worldX - targetChunk.x) / BLOCK_SIZE);
             const localY = Math.floor(worldY / BLOCK_SIZE);
-            targetChunk.setBlockType(localX, localY, blockType, wall, metaData);
+            targetChunk.setBlockTypeLocal(
+                localX,
+                localY,
+                blockType,
+                wall,
+                metaData
+            );
         } else {
             // Buffer the block with dimension index`
             bufferBlock(
@@ -691,15 +696,25 @@ class Chunk {
         return (worldX - targetChunk.x) / BLOCK_SIZE; // Scale the position to the block grid using BLOCK_SIZE
     }
 
-    getBlockType(x, y, calculated = true) {
-        if (calculated) y = this.calculateY(y);
-        if (!this.blocks[y]) return null;
-        return this.blocks[y][x].blockType;
+    userYToLocalY(y) {
+        return this.height - 1 - y;
     }
 
-    getBlock(x, y, calculated = true, wall = false) {
-        if (calculated) y = this.calculateY(y);
+    localYToUserY(y) {
+        return this.height - 1 - y;
+    }
 
+    getBlockTypeLocal(x, localY) {
+        if (!this.blocks[localY]) return null;
+        if (!this.blocks[localY][x]) return null;
+        return this.blocks[localY][x].blockType;
+    }
+
+    getBlockType(x, y) {
+        return this.getBlockTypeLocal(x, this.userYToLocalY(y));
+    }
+
+    getBlockLocal(x, localY, wall = false) {
         // Handle x out of bounds by getting from correct chunk
         if (x < 0 || x >= this.width) {
             const worldX = this.x + x * BLOCK_SIZE;
@@ -707,43 +722,46 @@ class Chunk {
             if (!targetChunk) return null;
 
             const localX = this.getLocalX(worldX, targetChunk);
-            return targetChunk.getBlock(localX, y, false, wall);
+            return targetChunk.getBlockLocal(localX, localY, wall);
         }
 
         if (!wall) {
-            if (!this.blocks[y]) return null;
-            if (!this.blocks[y][x]) return null;
-
-            return this.blocks[y][x];
-        } else {
-            if (!this.walls[y]) return null;
-            if (!this.walls[y][x]) return null;
-
-            return this.walls[y][x];
+            if (!this.blocks[localY]) return null;
+            if (!this.blocks[localY][x]) return null;
+            return this.blocks[localY][x];
         }
+
+        if (!this.walls[localY]) return null;
+        if (!this.walls[localY][x]) return null;
+        return this.walls[localY][x];
     }
 
-    getBlockTypeData(x, y, calculate = true, wall = false) {
-        if (calculate) y = this.calculateY(y);
+    getBlock(x, y, wall = false) {
+        return this.getBlockLocal(x, this.userYToLocalY(y), wall);
+    }
 
+    getBlockTypeDataLocal(x, localY, wall = false) {
         if (!wall) {
-            if (!this.blocks[y]) return null;
-            if (!this.blocks[y][x]) return null;
-            return GetBlock(this.blocks[y][x].blockType);
-        } else {
-            if (!this.walls[y]) return null;
-            if (!this.walls[y][x]) return null;
-            return GetBlock(this.walls[y][x].blockType);
+            if (!this.blocks[localY]) return null;
+            if (!this.blocks[localY][x]) return null;
+            return getBlock(this.blocks[localY][x].blockType);
         }
+
+        if (!this.walls[localY]) return null;
+        if (!this.walls[localY][x]) return null;
+        return getBlock(this.walls[localY][x].blockType);
     }
 
-    setBlockType(
+    getBlockTypeData(x, y, wall = false) {
+        return this.getBlockTypeDataLocal(x, this.userYToLocalY(y), wall);
+    }
+
+    setBlockTypeLocal(
         x,
         y,
         blockType,
         wall = false,
         metaData = null,
-        calculate = true,
         updateBlocks = false,
         makeLinks = true
     ) {
@@ -752,13 +770,12 @@ class Chunk {
 
         const array = wall ? this.walls : this.blocks;
 
-        if (calculate) y = this.calculateY(y); // y is now in chunk's internal bottom-up system
         if (!array[y] || !array[y][x]) return false; // Out of bounds check
 
         const block = array[y][x];
         if (block.blockType === blockType) return false;
 
-        const blockDef = GetBlock(blockType);
+        const blockDef = getBlock(blockType);
         let linkedBlocks = [];
 
         // Handle extended blocks
@@ -808,14 +825,13 @@ class Chunk {
                     continue;
                 }
 
-                const blockAtPos = targetChunk.getBlock(
+                const blockAtPos = targetChunk.getBlockLocal(
                     localX,
                     localY,
-                    false,
                     wall
                 );
                 const blockAtPosDef = blockAtPos
-                    ? GetBlock(blockAtPos.blockType)
+                    ? getBlock(blockAtPos.blockType)
                     : null;
 
                 if (
@@ -861,10 +877,9 @@ class Chunk {
                 );
                 const localY = Math.floor(worldY / BLOCK_SIZE);
 
-                const blockAtPos = targetChunk.getBlock(
+                const blockAtPos = targetChunk.getBlockLocal(
                     localX,
                     localY,
-                    false,
                     wall
                 );
 
@@ -880,18 +895,16 @@ class Chunk {
                 }
 
                 // Place the block and get its reference
-                targetChunk.setBlockType(
+                targetChunk.setBlockTypeLocal(
                     localX,
                     localY,
                     extendedBlock.blockId,
                     wall,
-                    metaData,
-                    false
+                    metaData
                 );
-                const extendedBlockRef = targetChunk.getBlock(
+                const extendedBlockRef = targetChunk.getBlockLocal(
                     localX,
                     localY,
-                    false,
                     wall
                 );
                 extendedBlockRefs.push(extendedBlockRef);
@@ -904,7 +917,10 @@ class Chunk {
 
             // Set the main block
             block.setBlockType(blockType);
-            linkedBlocks.push({ ...this.localToWorld(x, y, false), blockType });
+            linkedBlocks.push({
+                ...this.localToWorldInternal(x, y),
+                blockType,
+            });
 
             // Assign linkedBlocks to all affected blocks
             const allBlocks = [block, ...extendedBlockRefs];
@@ -919,7 +935,10 @@ class Chunk {
             }
 
             block.setBlockType(blockType);
-            linkedBlocks.push({ ...this.localToWorld(x, y, false), blockType });
+            linkedBlocks.push({
+                ...this.localToWorldInternal(x, y),
+                blockType,
+            });
             block.linkedBlocks = linkedBlocks;
         }
 
@@ -934,7 +953,7 @@ class Chunk {
             }
         }
         if (updateBlocks) {
-            this.updateAdjacentBlocks(x, y, wall, calculate);
+            this.updateAdjacentBlocksLocal(x, y, wall);
         }
 
         block.dark = wall;
@@ -947,6 +966,26 @@ class Chunk {
         if (metaData !== null) block.setBlockMetaData(metaData);
 
         return true;
+    }
+
+    setBlockType(
+        x,
+        y,
+        blockType,
+        wall = false,
+        metaData = null,
+        updateBlocks = false,
+        makeLinks = true
+    ) {
+        return this.setBlockTypeLocal(
+            x,
+            this.userYToLocalY(y),
+            blockType,
+            wall,
+            metaData,
+            updateBlocks,
+            makeLinks
+        );
     }
 
     checkForPortalBreak(x, y) {
@@ -978,7 +1017,7 @@ class Chunk {
             const adjX = worldX + dx;
             const adjY = worldY + dy;
             const key = `${adjX},${adjY}`;
-            const block = GetBlockAtWorldPosition(adjX, adjY);
+            const block = getBlockAtWorldPosition(adjX, adjY);
             if (block && block.blockType === Blocks.NetherPortal) {
                 hasAdjacentPortal = true;
                 queue.push({ x: adjX, y: adjY });
@@ -995,7 +1034,7 @@ class Chunk {
             const { x: currX, y: currY } = queue.shift();
 
             // Break the current portal block
-            GetBlockAtWorldPosition(currX, currY).breakBlock();
+            getBlockAtWorldPosition(currX, currY).breakBlock();
 
             // Check adjacent blocks for more NetherPortal blocks
             for (const { dx, dy } of directions) {
@@ -1004,7 +1043,7 @@ class Chunk {
                 const key = `${nextX},${nextY}`;
                 if (visited.has(key)) continue;
 
-                const block = GetBlockAtWorldPosition(nextX, nextY);
+                const block = getBlockAtWorldPosition(nextX, nextY);
                 if (block && block.blockType === Blocks.NetherPortal) {
                     queue.push({ x: nextX, y: nextY });
                     visited.add(key);
@@ -1051,8 +1090,8 @@ class Chunk {
                     wx < startX + frameWidthPx;
                     wx += BLOCK_SIZE
                 ) {
-                    const topBlock = GetBlockAtWorldPosition(wx, startY);
-                    const bottomBlock = GetBlockAtWorldPosition(
+                    const topBlock = getBlockAtWorldPosition(wx, startY);
+                    const bottomBlock = getBlockAtWorldPosition(
                         wx,
                         startY + innerHeightPx + BLOCK_SIZE
                     );
@@ -1108,8 +1147,8 @@ class Chunk {
                         wy < startY + innerHeightPx + BLOCK_SIZE;
                         wy += BLOCK_SIZE
                     ) {
-                        const leftBlock = GetBlockAtWorldPosition(startX, wy);
-                        const rightBlock = GetBlockAtWorldPosition(
+                        const leftBlock = getBlockAtWorldPosition(startX, wy);
+                        const rightBlock = getBlockAtWorldPosition(
                             startX + innerWidthPx + BLOCK_SIZE,
                             wy
                         );
@@ -1174,7 +1213,7 @@ class Chunk {
                         wy <= startY + innerHeightPx;
                         wy += BLOCK_SIZE
                     ) {
-                        const block = GetBlockAtWorldPosition(wx, wy);
+                        const block = getBlockAtWorldPosition(wx, wy);
                         if (!block) {
                             console.log(
                                 `Invalid inner area: Null block at (${wx}, ${wy})`
@@ -1262,13 +1301,13 @@ class Chunk {
                     const { minX, maxX, minY, maxY } = portalFound;
                     for (let wx = minX; wx <= maxX; wx += BLOCK_SIZE) {
                         for (let wy = minY; wy <= maxY; wy += BLOCK_SIZE) {
-                            const block = GetBlockAtWorldPosition(wx, wy);
+                            const block = getBlockAtWorldPosition(wx, wy);
                             if (block) {
                                 if (
                                     block.blockType === Blocks.Air ||
                                     block.blockType === Blocks.Fire
                                 ) {
-                                    SetBlockTypeAtPosition(
+                                    setBlockTypeAtPosition(
                                         wx,
                                         wy,
                                         Blocks.NetherPortal,
@@ -1354,8 +1393,8 @@ class Chunk {
                     wx < startX + frameWidthPx - BLOCK_SIZE;
                     wx += BLOCK_SIZE
                 ) {
-                    const topBlock = GetBlockAtWorldPosition(wx, startY);
-                    const bottomBlock = GetBlockAtWorldPosition(
+                    const topBlock = getBlockAtWorldPosition(wx, startY);
+                    const bottomBlock = getBlockAtWorldPosition(
                         wx,
                         startY + innerHeightPx + BLOCK_SIZE
                     );
@@ -1384,8 +1423,8 @@ class Chunk {
                         wy < startY + innerHeightPx + BLOCK_SIZE;
                         wy += BLOCK_SIZE
                     ) {
-                        const leftBlock = GetBlockAtWorldPosition(startX, wy);
-                        const rightBlock = GetBlockAtWorldPosition(
+                        const leftBlock = getBlockAtWorldPosition(startX, wy);
+                        const rightBlock = getBlockAtWorldPosition(
                             startX + innerWidthPx + BLOCK_SIZE,
                             wy
                         );
@@ -1422,7 +1461,7 @@ class Chunk {
                         wy <= startY + innerHeightPx;
                         wy += BLOCK_SIZE
                     ) {
-                        const block = GetBlockAtWorldPosition(wx, wy);
+                        const block = getBlockAtWorldPosition(wx, wy);
                         if (!block) {
                             isValidInner = false;
                             break;
@@ -1453,12 +1492,19 @@ class Chunk {
         return null;
     }
 
-    localToWorld(x, y, calculate = true) {
-        if (calculate) y = this.calculateY(y);
+    localToWorldInternal(x, y) {
         return { x: x * BLOCK_SIZE + this.x, y: y * BLOCK_SIZE };
     }
 
-    updateAdjacentBlocks(x, y, wall, calculate) {
+    localToWorldUser(x, y) {
+        return this.localToWorldInternal(x, this.userYToLocalY(y));
+    }
+
+    localToWorld(x, y) {
+        return this.localToWorldUser(x, y);
+    }
+
+    updateAdjacentBlocksLocal(x, y, wall) {
         const directions = [
             { dx: 0, dy: -1 }, // Up
             { dx: 0, dy: 1 }, // Down
@@ -1469,11 +1515,15 @@ class Chunk {
         for (const { dx, dy } of directions) {
             const adjX = x + dx;
             const adjY = y + dy;
-            const adjBlock = this.getBlock(adjX, adjY, calculate, wall);
+            const adjBlock = this.getBlockLocal(adjX, adjY, wall);
             if (adjBlock) {
                 adjBlock.blockUpdate();
             }
         }
+    }
+
+    updateAdjacentBlocks(x, y, wall) {
+        this.updateAdjacentBlocksLocal(x, this.userYToLocalY(y), wall);
     }
 
     //#region Lighting
@@ -1538,7 +1588,7 @@ class Chunk {
                 block.lightLevel = skyLight;
                 block.sunLight = false;
 
-                const def = GetBlock(block.blockType);
+                const def = getBlock(block.blockType);
 
                 if (
                     (!def.air && !def.transparent && def.collision) ||
@@ -1560,12 +1610,8 @@ class Chunk {
 
     //#endregion
 
-    calculateY(y) {
-        return this.height - 1 - y;
-    }
-
     countAirBlockArea(startX, startY) {
-        if (!GetBlock(this.getBlockType(startX, startY)).air) {
+        if (!getBlock(this.getBlockType(startX, startY)).air) {
             return 0;
         }
 
@@ -1581,7 +1627,7 @@ class Chunk {
                 y >= 0 &&
                 y < this.height &&
                 !visited.has(key) &&
-                GetBlock(this.getBlockType(x, y)).air
+                getBlock(this.getBlockType(x, y)).air
             ) {
                 queue.push([x, y]);
                 visited.add(key);

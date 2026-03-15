@@ -2,12 +2,12 @@ setInterval(() => {
     updateDebug();
 }, 1000 / 144);
 function updateDebug() {
-    HandleDebugging();
-    CameraLogic();
+    handleDebugging();
+    cameraLogic();
 }
 
-function HandleDebugging() {
-    if (drawDebugMouseBlock) PrintBlockLogic();
+function handleDebugging() {
+    if (drawDebugMouseBlockOverlay) printBlockLogic();
 }
 
 function handleDebugInput() {
@@ -19,8 +19,13 @@ function handleDebugInput() {
     if (input.isActionPressed("debugFileSize")) toggleFileSize();
     if (input.isActionPressed("debugFps")) toggleFps();
     if (input.isActionPressed("debugCoordinates")) toggleCoordinates();
-    if (input.isActionPressed("debugSave") && typeof SaveWorld === "function") SaveWorld();
-    if (input.isActionPressed("debugSaveBackup") && typeof SaveWorld === "function") SaveWorld(false, true);
+    if (input.isActionPressed("debugSave") && typeof saveWorld === "function")
+        saveWorld();
+    if (
+        input.isActionPressed("debugSaveBackup") &&
+        typeof saveWorld === "function"
+    )
+        saveWorld(false, true);
 }
 
 function updateDebugButtonLabels() {
@@ -29,12 +34,12 @@ function updateDebugButtonLabels() {
         if (el) el.textContent = `${label} - ${on ? "ON" : "OFF"}`;
     };
     set("debug-chunk-borders", "Chunk Borders", drawingChunkBorders);
-    set("debug-camera", "Camera", drawCamera);
+    set("debug-camera", "Camera", drawCameraOverlay);
     set("debug-hitbox", "Hitbox", drawHitbox);
-    set("debug-print-block", "Print Block", drawDebugMouseBlock);
-    set("debug-file-size", "File Size", drawFileSize);
-    set("debug-fps", "FPS", drawFps);
-    set("debug-coords", "Coords", drawCoordinates);
+    set("debug-print-block", "Print Block", drawDebugMouseBlockOverlay);
+    set("debug-file-size", "File Size", drawFileSizeOverlay);
+    set("debug-fps", "FPS", drawFpsOverlay);
+    set("debug-coords", "Coords", drawCoordinatesOverlay);
 }
 
 function toggleChunkBorders() {
@@ -42,7 +47,7 @@ function toggleChunkBorders() {
     updateDebugButtonLabels();
 }
 function toggleCamera() {
-    drawCamera = !drawCamera;
+    drawCameraOverlay = !drawCameraOverlay;
     updateDebugButtonLabels();
 }
 function toggleHitbox() {
@@ -50,35 +55,35 @@ function toggleHitbox() {
     updateDebugButtonLabels();
 }
 function togglePrintBlock() {
-    drawDebugMouseBlock = !drawDebugMouseBlock;
+    drawDebugMouseBlockOverlay = !drawDebugMouseBlockOverlay;
     updateDebugButtonLabels();
 }
 function toggleFileSize() {
-    drawFileSize = !drawFileSize;
+    drawFileSizeOverlay = !drawFileSizeOverlay;
     updateDebugButtonLabels();
 }
 function toggleFps() {
-    drawFps = !drawFps;
+    drawFpsOverlay = !drawFpsOverlay;
     updateDebugButtonLabels();
 }
 function toggleCoordinates() {
-    drawCoordinates = !drawCoordinates;
+    drawCoordinatesOverlay = !drawCoordinatesOverlay;
     updateDebugButtonLabels();
 }
 
-function PrintBlockLogic() {
+function printBlockLogic() {
     if (input.isActionDown("attack") || input.isActionDown("place")) {
         const mousePos = input.getMousePositionOnBlockGrid();
-        const block = GetBlockAtWorldPosition(mousePos.x, mousePos.y);
+        const block = getBlockAtWorldPosition(mousePos.x, mousePos.y);
 
         chat.message(
-            `${GetBlock(block.blockType).name} at ${mousePos.x}, ${
+            `${getBlock(block.blockType).name} at ${mousePos.x}, ${
                 mousePos.y
             } ${
                 block.metaData && block.metaData.props
                     ? "metadata: " + JSON.stringify(block.metaData.props)
                     : ""
-            }`
+            }`,
         );
 
         console.log(mousePos.x + " - " + mousePos.y);
@@ -88,7 +93,7 @@ function PrintBlockLogic() {
     }
 }
 
-function CameraLogic() {
+function cameraLogic() {
     if (player) return;
 
     const maxSpeed = 15;
@@ -99,24 +104,24 @@ function CameraLogic() {
     if (input.isActionDown("moveLeft"))
         camera.velocity.x = Math.max(
             camera.velocity.x - acceleration,
-            -maxSpeed
+            -maxSpeed,
         );
     if (input.isActionDown("moveRight"))
         camera.velocity.x = Math.min(
             camera.velocity.x + acceleration,
-            maxSpeed
+            maxSpeed,
         );
 
     // Vertical movement (W/S keys)
     if (input.isActionDown("moveUp"))
         camera.velocity.y = Math.max(
             camera.velocity.y - acceleration,
-            -maxSpeed
+            -maxSpeed,
         );
     if (input.isActionDown("moveDown"))
         camera.velocity.y = Math.min(
             camera.velocity.y + acceleration,
-            maxSpeed
+            maxSpeed,
         );
 
     // Decelerate smoothly when no input

@@ -155,11 +155,11 @@ class Entity {
     getBlockAtPosition(worldX, worldY) {
         worldX = Math.floor(worldX / BLOCK_SIZE) * BLOCK_SIZE;
         worldY = Math.floor(worldY / BLOCK_SIZE) * BLOCK_SIZE;
-        return GetBlockAtWorldPosition(worldX, worldY);
+        return getBlockAtWorldPosition(worldX, worldY);
     }
 
     isFluid(blockType) {
-        return GetBlock(blockType).fluid;
+        return getBlock(blockType).fluid;
     }
 
     checkDownCollision(futureY) {
@@ -174,7 +174,7 @@ class Entity {
 
         const checkBlockWithCutoff = (block, x, y) => {
             if (!block || !this.isSolid(block.blockType)) return null;
-            const def = GetBlock(block.blockType);
+            const def = getBlock(block.blockType);
             if (!def.collision) return null;
             const effectiveHeight = BLOCK_SIZE * (1 - block.cutoff);
             const blockTopY =
@@ -220,7 +220,7 @@ class Entity {
 
         const checkBlockWithCutoff = (block, x, y) => {
             if (!block || !this.isSolid(block.blockType)) return null;
-            const def = GetBlock(block.blockType);
+            const def = getBlock(block.blockType);
             if (!def.collision) return null;
             const effectiveHeight = BLOCK_SIZE * (1 - block.cutoff);
             const blockTopY =
@@ -269,7 +269,7 @@ class Entity {
 
         const checkBlockWithCutoff = (block, x, y) => {
             if (!block || !this.isSolid(block.blockType)) return null;
-            const def = GetBlock(block.blockType);
+            const def = getBlock(block.blockType);
             if (!def.collision) return null;
             const effectiveHeight = BLOCK_SIZE * (1 - block.cutoff);
             const blockTopY =
@@ -415,8 +415,8 @@ class Entity {
     }
 
     isSolid(blockType) {
-        if (GetBlock(blockType).fluid) return false;
-        return GetBlock(blockType).collision;
+        if (getBlock(blockType).fluid) return false;
+        return getBlock(blockType).collision;
     }
 
     updateEntity() {
@@ -437,7 +437,7 @@ class Entity {
         if (this.velocity.x === 0) return;
 
         const averageColor = getSpriteAverageColor(
-            "blocks/" + GetBlock(this.standingOnBlockType).iconSprite,
+            "blocks/" + getBlock(this.standingOnBlockType).iconSprite,
         );
 
         if (!averageColor || averageColor === "#000000") return;
@@ -467,7 +467,7 @@ class Entity {
                 .length > 0
         ) {
             for (let block of this.collidingWithBlocks) {
-                const blockData = GetBlock(block.blockType);
+                const blockData = getBlock(block.blockType);
 
                 if (blockData.specialType !== SpecialType.NetherPortal) {
                     collidingWithPortal = false;
@@ -702,7 +702,7 @@ class Entity {
                 ) {
                     const newY = blockTopY - this.hitbox.y;
                     const checkAbove = this.checkUpCollision(newY);
-                    const blockAboveSlab = GetBlockAtWorldPosition(
+                    const blockAboveSlab = getBlockAtWorldPosition(
                         rightCollision.transform.position.x,
                         blockTopY - BLOCK_SIZE,
                     );
@@ -710,7 +710,7 @@ class Entity {
                     if (
                         !checkAbove &&
                         (!blockAboveSlab ||
-                            !GetBlock(blockAboveSlab.blockType).collision)
+                            !getBlock(blockAboveSlab.blockType).collision)
                     ) {
                         this.position.y = newY;
                         this.velocity.y = 0;
@@ -743,7 +743,7 @@ class Entity {
                 ) {
                     const newY = blockTopY - this.hitbox.y;
                     const checkAbove = this.checkUpCollision(newY);
-                    const blockAboveSlab = GetBlockAtWorldPosition(
+                    const blockAboveSlab = getBlockAtWorldPosition(
                         leftCollision.transform.position.x,
                         blockTopY - BLOCK_SIZE,
                     );
@@ -751,7 +751,7 @@ class Entity {
                     if (
                         !checkAbove &&
                         (!blockAboveSlab ||
-                            !GetBlock(blockAboveSlab.blockType).collision)
+                            !getBlock(blockAboveSlab.blockType).collision)
                     ) {
                         this.position.y = newY;
                         this.velocity.y = 0;
@@ -832,7 +832,7 @@ class Entity {
         this.velocity.y = 0;
         this.grounded = true;
         this.takeFallDamage();
-        this.drag = GetBlock(this.standingOnBlockType).drag;
+        this.drag = getBlock(this.standingOnBlockType).drag;
         if (this.knockBackBuffer) {
             this.isGettingKnockback = false;
             this.knockBackBuffer = false;
@@ -873,13 +873,13 @@ class Entity {
         this.stepCounter += Math.abs(this.velocity.x / 100) * deltaTime;
         if (this.stepCounter >= this.stepSize) {
             if (!this.footstepSounds) {
-                const block = GetBlock(this.standingOnBlockType);
+                const block = getBlock(this.standingOnBlockType);
                 if (!block) return;
                 this.playFootstepFromBlock(block);
                 this.stepCounter -= this.stepSize;
                 return;
             }
-            PlayRandomSoundFromArray({
+            playRandomSoundFromArray({
                 array: this.footstepSounds,
                 volume: 0.2,
                 positional: true,
@@ -893,7 +893,7 @@ class Entity {
     playFootstepFromBlock(block) {
         const sounds = block.breakingSound;
         if (!sounds) return;
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: sounds,
             volume: 0.2,
             positional: true,
@@ -913,7 +913,7 @@ class Entity {
             for (let y = startY; y <= endY; y++) {
                 const blockX = x * BLOCK_SIZE;
                 const blockY = y * BLOCK_SIZE;
-                const block = GetBlockAtWorldPosition(blockX, blockY);
+                const block = getBlockAtWorldPosition(blockX, blockY);
                 if (block && block.blockType) {
                     // If blockType is specified, skip blocks that don't match
                     if (blockType !== null && block.blockType !== blockType) {
@@ -946,7 +946,7 @@ class Entity {
 
     filterBlocksByProperty(blocks, property) {
         return blocks.filter((block) => {
-            const blockData = GetBlock(block.blockType);
+            const blockData = getBlock(block.blockType);
             return blockData && blockData[property];
         });
     }
@@ -977,7 +977,7 @@ class Entity {
 
     playWaterEnterSFX() {
         if (!this.playWaterEnterSound) return;
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Water_Enter,
             positional: true,
             origin: this.position,

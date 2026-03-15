@@ -27,7 +27,11 @@
         <div class="footer">
             <p>
                 Made by Plekiko<br />
-                <a class="footer-button" href="https://github.com/plekiko/MinecraftJS" target="_blank">
+                <a
+                    class="footer-button"
+                    href="https://github.com/plekiko/MinecraftJS"
+                    target="_blank"
+                >
                     View Source Code on GitHub
                 </a>
             </p>
@@ -116,7 +120,9 @@
                         >
                             Download
                         </button>
-                        <button onclick="backToMenu()" id="" class="btn">Cancel</button>
+                        <button onclick="backToMenu()" id="" class="btn">
+                            Cancel
+                        </button>
                     </div>
                 </div>
             </div>
@@ -172,7 +178,13 @@
                     width: 16rem;
                 }
             </style>
-            <button id="server-download-btn" class="btn" onclick="downloadServer()">Download Server</button>
+            <button
+                id="server-download-btn"
+                class="btn"
+                onclick="downloadServer()"
+            >
+                Download Server
+            </button>
             <div class="world-select-container-text">
                 <div class="big-text">
                     Play Multiplayer
@@ -216,13 +228,12 @@
                         >
                             Delete
                         </button>
-                        <button
-                            onclick="forceRefreshServers()"
-                            class="btn"
-                        >
+                        <button onclick="forceRefreshServers()" class="btn">
                             Refresh
                         </button>
-                        <button onclick="backToMenu()" class="btn">Cancel</button>
+                        <button onclick="backToMenu()" class="btn">
+                            Cancel
+                        </button>
                     </div>
                 </div>
             </div>
@@ -369,18 +380,54 @@
                 </div>
                 <div class="options-modal" id="options-main">
                     <div class="slider-container">
-                        <span class="slider-label" id="music-volume-label">Music - 100%</span>
-                        <input type="range" class="slider-input" id="music-volume-slider" min="0" max="100" value="100">
+                        <span class="slider-label" id="music-volume-label"
+                            >Music - 100%</span
+                        >
+                        <input
+                            type="range"
+                            class="slider-input"
+                            id="music-volume-slider"
+                            min="0"
+                            max="100"
+                            value="100"
+                        />
                     </div>
                     <div class="slider-container">
-                        <span class="slider-label" id="sfx-volume-label">SFX - 100%</span>
-                        <input type="range" class="slider-input" id="sfx-volume-slider" min="0" max="100" value="100">
+                        <span class="slider-label" id="sfx-volume-label"
+                            >SFX - 100%</span
+                        >
+                        <input
+                            type="range"
+                            class="slider-input"
+                            id="sfx-volume-slider"
+                            min="0"
+                            max="100"
+                            value="100"
+                        />
                     </div>
-                    <a class="btn" id="lighting-toggle-btn" onclick="toggleLighting()">Lighting - ON</a>
-                    <a class="btn" onclick="showTexturePacks()">Texture Packs...</a>
-                    <a class="btn" id="controls-btn" onclick="gotoControls()">Controls...</a>
-                    <button type="button" class="btn" onclick="uploadSkin()" id="upload-skin-btn">Upload Skin</button>
-                    <button type="button" class="btn" onclick="clearSkin()">Clear Skin</button>
+                    <a
+                        class="btn"
+                        id="lighting-toggle-btn"
+                        onclick="toggleLighting()"
+                        >Lighting - ON</a
+                    >
+                    <a class="btn" onclick="showTexturePacks()"
+                        >Texture Packs...</a
+                    >
+                    <a class="btn" id="controls-btn" onclick="gotoControls()"
+                        >Controls...</a
+                    >
+                    <button
+                        type="button"
+                        class="btn"
+                        onclick="uploadSkin()"
+                        id="upload-skin-btn"
+                    >
+                        Upload Skin
+                    </button>
+                    <button type="button" class="btn" onclick="clearSkin()">
+                        Clear Skin
+                    </button>
 
                     <div class="input-field-container">
                         <div class="input-field-title">Username</div>
@@ -398,25 +445,34 @@
                     </div>
 
                     <div class="button-space"></div>
-                    <a onclick="backToMenu(), saveSettings()" class="btn">Done</a>
+                    <a onclick="(backToMenu(), saveSettings())" class="btn"
+                        >Done</a
+                    >
                 </div>
 
                 <!-- Key Binds -->
-                <div id="controls-panel" style="display: none;">
+                <div id="controls-panel" style="display: none">
                     <div class="controls-list-scroll">
                         <div id="controls-list"></div>
                     </div>
                     <div class="world-buttons-container">
                         <div>
-                            <button type="button" class="btn" onclick="resetControlsToDefault()">Reset to default</button>
+                            <button
+                                type="button"
+                                class="btn"
+                                onclick="resetControlsToDefault()"
+                            >
+                                Reset to default
+                            </button>
                             <a class="btn" onclick="gotoOptions()">Done</a>
                         </div>
                     </div>
                 </div>
             </div>
-    </body>
+        </div>
 
-    <script src="Assets/utils/keyBindings.js"></script>
-    <script src="buttonUtils.js"></script>
-    <script src="menu.js"></script>
+        <script src="Assets/utils/keyBindings.js"></script>
+        <script src="buttonUtils.js"></script>
+        <script src="menu.js"></script>
+    </body>
 </html>

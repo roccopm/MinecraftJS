@@ -87,12 +87,15 @@ class Chat {
         if (key === "ArrowRight") {
             this.cursorPosition = Math.min(
                 this.currentMessage.length,
-                this.cursorPosition + 1
+                this.cursorPosition + 1,
             );
             return;
         }
         if (key === "ArrowUp") {
-            if (this.chatLog.length > 0 && this.historyIndex < this.chatLog.length) {
+            if (
+                this.chatLog.length > 0 &&
+                this.historyIndex < this.chatLog.length
+            ) {
                 if (this.historyIndex === -1) this.historyIndex = 0;
                 this.historyIndex++;
                 this.currentMessage =
@@ -282,6 +285,7 @@ class Chat {
                         "2",
                         "3",
                     ];
+
                 case "x":
                 case "y":
                     return [
@@ -293,6 +297,7 @@ class Chat {
                               ).toString()
                             : "0",
                     ];
+
                 case "entity":
                     const entitySuggestions = Object.keys(Entities).filter(
                         (entity) => entity.toLowerCase().startsWith(prefix),
@@ -400,7 +405,7 @@ class Chat {
         const biome = AllBiomes[biomeName];
 
         if (biome) {
-            const biomeChunkX = LocateBiome(biome);
+            const biomeChunkX = locateBiome(biome);
 
             if (!biomeChunkX) {
                 this.message("Biome not found.", "", Colors.Red);
@@ -573,19 +578,37 @@ class Chat {
         const block = Blocks[blockName];
 
         if (block) {
-            SetBlockTypeAtPosition(position.x, position.y, block);
-
-            ServerPlaceBlock(
-                getChunkXForWorldX(position.x),
-                worldToLocal(position.x, position.y).x,
-                worldToLocal(position.x, position.y).y,
-                block,
+            const userBlockPos = new Vector2(
+                Math.floor(position.x / BLOCK_SIZE),
+                worldToUserBlockY(position.y),
             );
 
+            const placed = setBlockTypeAtUserBlockPosition(
+                userBlockPos.x,
+                userBlockPos.y,
+                block,
+                false,
+                activeDimension,
+                null,
+                true,
+            );
+
+            if (placed) {
+                serverPlaceBlock(
+                    getChunkXForWorldX(position.x),
+                    worldToLocal(position.x, position.y).x,
+                    worldToLocal(position.x, position.y).y,
+                    block,
+                );
+            }
+
+            if (!placed) {
+                this.message("Could not place block here.", "", Colors.Red);
+                return;
+            }
+
             this.cheatMessage(
-                `Set block ${blockName} at ${Math.floor(
-                    position.x,
-                )}, ${Math.floor(position.y)}`,
+                `Set block ${blockName} at ${userBlockPos.x}, ${userBlockPos.y}`,
             );
         } else {
             this.message("Block not found.", "", Colors.Red);
@@ -687,14 +710,15 @@ class Chat {
         const structureName = messageArray[1];
 
         if (Structures[structureName] !== undefined) {
-            GenerateStructure(
+            const playerUserPos = worldToBlocks(player.position);
+            generateStructure(
                 structureName,
                 player.position.x,
-                player.position.y,
+                playerUserPos.y * BLOCK_SIZE,
             );
 
             this.cheatMessage(
-                `Structure ${structureName} generated at ${player.position.x}, ${player.position.y}`,
+                `Structure ${structureName} generated at ${playerUserPos.x}, ${playerUserPos.y}`,
             );
         } else {
             this.message(
@@ -727,17 +751,16 @@ class Chat {
             return;
         }
 
-        position.y = -position.y + CHUNK_HEIGHT * BLOCK_SIZE;
-
         if (Entities[itemName] != null) {
             const entity = Entities[itemName];
+            const userPosition = worldToBlocks(position);
 
             for (let i = 0; i < count; i++) {
                 summonEntity(entity, structuredClone(position));
             }
 
             this.cheatMessage(
-                `Summoned ${count} ${entity.name} at ${position.x}, ${position.y}`,
+                `Summoned ${count} ${entity.name} at ${userPosition.x}, ${userPosition.y}`,
             );
         } else {
             this.message("Entity not found.", "", Colors.Red);
@@ -746,12 +769,11 @@ class Chat {
 
     getWorldPosition(position) {
         if (position.x === "~") position.x = player.position.x / BLOCK_SIZE;
-        if (position.y === "~")
-            position.y = CHUNK_HEIGHT - player.position.y / BLOCK_SIZE;
+        if (position.y === "~") position.y = worldToBlocks(player.position).y;
 
         if (isNaN(position.x) || isNaN(position.y)) return null;
 
-        return new Vector2(position.x * BLOCK_SIZE, position.y * BLOCK_SIZE);
+        return userBlocksToWorldPosition(position.x, position.y);
     }
 
     teleport(messageArray) {
@@ -773,6 +795,7 @@ class Chat {
 
         if (!targetPosition) {
             this.invalidCommand("/tp <x> <y>");
+            return;
         }
 
         player.teleport(targetPosition);
@@ -824,6 +847,7 @@ class Chat {
             "Adventure",
             "Spectator",
         ];
+
         this.cheatMessage("Gamemode set to " + gamemodeNames[gamemode] + ".");
     }
 
@@ -917,8 +941,8 @@ class Chat {
             this.cheatMessage(
                 `Gave ${count} ${
                     category === "Blocks"
-                        ? GetBlock(item).name
-                        : GetItem(item).name
+                        ? getBlock(item).name
+                        : getItem(item).name
                 } to the player.`,
             );
         } else {

@@ -10,7 +10,7 @@ class Noise {
         const noiseRaw = tooloud.Perlin.noise(
             x * this.scale * multiplier,
             y * this.scale * multiplier,
-            0
+            0,
         );
 
         // Ensure noise is within range and apply intensity and min adjustments

@@ -8,8 +8,8 @@ class Drop extends Entity {
     }) {
         const isItem = itemId !== null;
         const spritePath = isItem
-            ? "items/" + GetItem(itemId).sprite
-            : "blocks/" + GetBlock(blockId).iconSprite;
+            ? "items/" + getItem(itemId).sprite
+            : "blocks/" + getBlock(blockId).iconSprite;
         const sprite = getSpriteUrl(spritePath);
 
         const spriteSize = getSpriteSize(spritePath);
@@ -24,7 +24,7 @@ class Drop extends Entity {
             hitbox: new Vector2(BLOCK_SIZE / 1.5, BLOCK_SIZE / 1.5),
             sprite: sprite,
             spriteScale: spriteScale * 2, // Apply the dynamically calculated scale
-            cutoff: GetBlock(blockId)?.defaultCutoff || 0,
+            cutoff: getBlock(blockId)?.defaultCutoff || 0,
             bouncing: true,
             type: EntityTypes.Drop,
             float: true,
@@ -47,7 +47,7 @@ class Drop extends Entity {
     }
 
     getStackSize() {
-        if (this.itemId != null) return GetItem(this.itemId).stackSize;
+        if (this.itemId != null) return getItem(this.itemId).stackSize;
 
         return 64;
     }

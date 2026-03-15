@@ -127,14 +127,14 @@ class Inventory {
                 summonEntity(
                     Drop,
                     new Vector2(
-                        position.x + RandomRange(-BLOCK_SIZE, BLOCK_SIZE),
-                        position.y
+                        position.x + randomRange(-BLOCK_SIZE, BLOCK_SIZE),
+                        position.y,
                     ),
                     {
                         blockId: item.blockId,
                         itemId: item.itemId,
                         count: item.count,
-                    }
+                    },
                 );
             }
         }
@@ -147,7 +147,7 @@ class Inventory {
             this.inventoryUI.x + x + this.openUIOffset.x,
             this.inventoryUI.y + y + this.openUIOffset.y,
             16 * 3,
-            16 * 3
+            16 * 3,
         );
     }
 
@@ -185,7 +185,7 @@ class Inventory {
                                 blockId: item.blockId,
                                 itemId: item.itemId,
                                 count: leftOverCount,
-                            })
+                            }),
                         );
                     }
                 }
@@ -323,7 +323,7 @@ class Inventory {
                 for (let i = 0; i < this.storageSlots.length; i++) {
                     for (let j = 0; j < this.storageSlots[i].length; j++) {
                         this.storage[i][j] = this.cloneItem(
-                            this.storageSlots[i][j].item
+                            this.storageSlots[i][j].item,
                         );
                     }
                 }
@@ -334,7 +334,7 @@ class Inventory {
                 for (let i = 0; i < this.storageSlots.length; i++) {
                     for (let j = 0; j < this.storageSlots[i].length; j++) {
                         this.storage[i][j] = this.cloneItem(
-                            this.storageSlots[i][j].item
+                            this.storageSlots[i][j].item,
                         );
                     }
                 }
@@ -350,7 +350,7 @@ class Inventory {
         for (let i = 0; i < this.storageSlots.length; i++) {
             for (let j = 0; j < this.storageSlots[i].length; j++) {
                 this.storageSlots[i][j].item = this.cloneItem(
-                    this.storage[i][j]
+                    this.storage[i][j],
                 );
             }
         }
@@ -432,7 +432,7 @@ class Inventory {
                 new InventorySlot({
                     position: { x: 158 + x * 63, y: 189 },
                     item: this.storage[0][x],
-                })
+                }),
             );
         }
 
@@ -530,6 +530,7 @@ class Inventory {
             text: `Creative - Page ${this.currentCreativePage + 1}/${
                 this.creativeMaxPages
             }`,
+
             size: 27,
         });
     }
@@ -588,7 +589,7 @@ class Inventory {
         const startIndex = this.currentCreativePage * itemsPerPage;
         const endIndex = Math.min(
             startIndex + itemsPerPage,
-            this.creativeItems.length
+            this.creativeItems.length,
         );
 
         // Create a 6x9 grid
@@ -664,17 +665,17 @@ class Inventory {
 
         // First we take all blocks and add them to the creative inventory
         for (let i = 0; i < blocks.length; i++) {
-            if (GetBlock(blocks[i]).excludeFromCreativeInventory) continue;
+            if (getBlock(blocks[i]).excludeFromCreativeInventory) continue;
             this.creativeItems.push(
-                new InventoryItem({ blockId: blocks[i], count: 1 })
+                new InventoryItem({ blockId: blocks[i], count: 1 }),
             );
         }
 
         // Then we take all items and add them to the creative inventory
         for (let i = 0; i < items.length; i++) {
-            if (GetItem(items[i]).excludeFromCreativeInventory) continue;
+            if (getItem(items[i]).excludeFromCreativeInventory) continue;
             this.creativeItems.push(
-                new InventoryItem({ itemId: items[i], count: 1 })
+                new InventoryItem({ itemId: items[i], count: 1 }),
             );
         }
 
@@ -767,7 +768,7 @@ class Inventory {
         for (let i = 0; i < this.storageSlots.length; i++) {
             for (let j = 0; j < this.storageSlots[i].length; j++) {
                 this.storage[i][j] = this.cloneItem(
-                    this.storageSlots[i][j].item
+                    this.storageSlots[i][j].item,
                 );
             }
         }
@@ -887,7 +888,7 @@ class Inventory {
     }
 
     getStackSize(item) {
-        return item.itemId ? GetItem(item.itemId).stackSize : 64;
+        return item.itemId ? getItem(item.itemId).stackSize : 64;
     }
 
     craftingComplete() {
@@ -1116,7 +1117,7 @@ class Inventory {
         if (
             this.isSlotHovered(
                 this.craftingOutputSlot.position.x,
-                this.craftingOutputSlot.position.y
+                this.craftingOutputSlot.position.y,
             )
         ) {
             this.mouseOverSlot(0, 0, null, this.craftingOutputSlot.item);
@@ -1188,14 +1189,14 @@ class Inventory {
 
         // Check if each recipe item has a matching slot item
         return recipeItems.every((recipeItem) =>
-            nonEmptySlots.some((slot) => this.isMatch(slot.item, recipeItem))
+            nonEmptySlots.some((slot) => this.isMatch(slot.item, recipeItem)),
         );
     }
 
     isMatch(slotItem, patternItem) {
         // Retrieve the category of slotItem using GetBlock if it has a blockId
         const slotCategory = slotItem.blockId
-            ? GetBlock(slotItem.blockId).category
+            ? getBlock(slotItem.blockId).category
             : null;
 
         if (slotItem.count == 0 && patternItem.count == 0) return true;
@@ -1244,7 +1245,7 @@ class Inventory {
                         startRow,
                         startCol,
                         patternRows,
-                        patternCols
+                        patternCols,
                     )
                 ) {
                     return true;
@@ -1299,7 +1300,7 @@ class Inventory {
                 slot.item.itemId === patternItem.itemId) ||
             (patternItem.blockCategory &&
                 slot.item.blockCategory ===
-                    GetBlock(patternItem.blockId).category)
+                    getBlock(patternItem.blockId).category)
         );
     }
 
@@ -1480,7 +1481,7 @@ class Inventory {
 
         const spriteUrl = getSpriteUrl(
             spritePath,
-            isEqualToOriginal(spritePath)
+            isEqualToOriginal(spritePath),
         );
 
         const drawParams = {
@@ -1510,14 +1511,30 @@ class Inventory {
     }
 
     drawPlayerSkin(ctx) {
-        if (!player?.body?.image?.complete || typeof drawSkinPreview !== "function") return;
+        if (
+            !player?.body?.image?.complete ||
+            typeof drawSkinPreview !== "function"
+        )
+            return;
 
         const INVENTORY_PLAYER_OFFSET = { x: 128, y: 48 };
         const INVENTORY_PLAYER_SCALE = 6.65;
 
-        const baseX = this.inventoryUI.x + INVENTORY_PLAYER_OFFSET.x + this.openUIOffset.x;
-        const baseY = this.inventoryUI.y + INVENTORY_PLAYER_OFFSET.y + this.openUIOffset.y;
-        drawSkinPreview(ctx, player.body.image, baseX, baseY, INVENTORY_PLAYER_SCALE);
+        const baseX =
+            this.inventoryUI.x +
+            INVENTORY_PLAYER_OFFSET.x +
+            this.openUIOffset.x;
+        const baseY =
+            this.inventoryUI.y +
+            INVENTORY_PLAYER_OFFSET.y +
+            this.openUIOffset.y;
+        drawSkinPreview(
+            ctx,
+            player.body.image,
+            baseX,
+            baseY,
+            INVENTORY_PLAYER_SCALE,
+        );
     }
 
     drawButtons(ctx) {
@@ -1550,7 +1567,7 @@ class Inventory {
             slot.position.x + this.inventoryUI.x - 4 + this.openUIOffset.x,
             slot.position.y + this.inventoryUI.y - 4 + this.openUIOffset.y,
             18.5 * 3,
-            18.5 * 3
+            18.5 * 3,
         );
         ctx.globalAlpha = 1;
     }
@@ -1597,7 +1614,7 @@ class Inventory {
     }
 
     getSlotItem(item) {
-        return item.blockId ? GetBlock(item.blockId) : GetItem(item.itemId);
+        return item.blockId ? getBlock(item.blockId) : getItem(item.itemId);
     }
 
     drawSlots(array) {
@@ -1619,8 +1636,8 @@ class Inventory {
         const hoverInventoryItem = this.hoverItem;
 
         let title = hoverInventoryItem.blockId
-            ? GetBlock(hoverInventoryItem.blockId).name
-            : GetItem(hoverInventoryItem.itemId).name;
+            ? getBlock(hoverInventoryItem.blockId).name
+            : getItem(hoverInventoryItem.itemId).name;
 
         let text = title;
         // if (Object.keys(hoverInventoryItem.props).length > 0)
@@ -1646,8 +1663,8 @@ class Inventory {
         const isItem = holdingItem.itemId !== null;
 
         const path = isItem
-            ? "items/" + GetItem(holdingItem.itemId).sprite
-            : "blocks/" + GetBlock(holdingItem.blockId).iconSprite;
+            ? "items/" + getItem(holdingItem.itemId).sprite
+            : "blocks/" + getBlock(holdingItem.blockId).iconSprite;
 
         const spritePath = getSpriteUrl(path);
         const spriteSize = getSpriteSize(path);
@@ -1656,7 +1673,7 @@ class Inventory {
 
         let cutoff = 0;
         if (holdingItem.blockId) {
-            cutoff = GetBlock(holdingItem.blockId).defaultCutoff || 0;
+            cutoff = getBlock(holdingItem.blockId).defaultCutoff || 0;
         }
 
         const drawHeight = actualHeight - cutoff * actualHeight; // Height after cutoff
@@ -1705,7 +1722,7 @@ class Inventory {
     drawSlot(slot) {
         slot.draw(
             this.inventoryUI.x + this.openUIOffset.x,
-            this.inventoryUI.y + this.openUIOffset.y
+            this.inventoryUI.y + this.openUIOffset.y,
         );
     }
 }

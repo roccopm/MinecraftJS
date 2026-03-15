@@ -74,7 +74,7 @@ class Zombie extends Mob {
         if (!this.damage(damage)) return;
 
         this.knockBack(hitfromX, kb);
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Zombie_Hurt,
             positional: true,
             origin: this.position,

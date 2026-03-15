@@ -52,7 +52,7 @@ class Creeper extends Mob {
         if (distance <= 2.5 * BLOCK_SIZE) {
             this.primed = true;
             this.fuse = this.fuseMax;
-            PlayRandomSoundFromArray({
+            playRandomSoundFromArray({
                 array: Sounds.TNT_Fuse,
                 positional: true,
                 origin: this.position,
@@ -93,7 +93,7 @@ class Creeper extends Mob {
         if (!this.damage(damage)) return;
 
         this.knockBack(hitfromX, kb);
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Creeper_Hurt,
             positional: true,
             origin: this.position,

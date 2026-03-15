@@ -208,8 +208,9 @@ function checkDissipation(block, worldPos) {
         { dx: -BLOCK_SIZE, dy: 0 },
         { dx: BLOCK_SIZE, dy: 0 },
     ];
+
     neighborOffsets.forEach((offset) => {
-        const neighbor = GetBlockAtWorldPosition(
+        const neighbor = getBlockAtWorldPosition(
             worldPos.x + offset.dx,
             worldPos.y + offset.dy,
         );
@@ -235,13 +236,13 @@ function checkDissipation(block, worldPos) {
 }
 
 function flowDownward(block, worldPos) {
-    let below = GetBlockAtWorldPosition(worldPos.x, worldPos.y + BLOCK_SIZE);
+    let below = getBlockAtWorldPosition(worldPos.x, worldPos.y + BLOCK_SIZE);
     if (
-        (below && GetBlock(below.blockType).air) ||
-        (below && GetBlock(below.blockType).breakByFluid)
+        (below && getBlock(below.blockType).air) ||
+        (below && getBlock(below.blockType).breakByFluid)
     ) {
-        if (GetBlock(below.blockType).breakByFluid) {
-            below.breakBlock(GetBlock(below.blockType).dropWithoutTool);
+        if (getBlock(below.blockType).breakByFluid) {
+            below.breakBlock(getBlock(below.blockType).dropWithoutTool);
         }
         below.setBlockType(block.blockType);
 
@@ -255,25 +256,24 @@ function flowDownward(block, worldPos) {
 function setBlockType(block, type, updateAdjacent = true) {
     const chunk = getDimensionChunks(activeDimension).get(block.chunkX);
     if (!chunk) return;
-    chunk.setBlockType(
+    chunk.setBlockTypeLocal(
         block.x,
         block.y,
         type,
         block.wall,
         null,
-        false,
         updateAdjacent,
     );
 }
 
 function verticalCheckAbove(block, worldPos) {
-    let above = GetBlockAtWorldPosition(worldPos.x, worldPos.y - BLOCK_SIZE);
+    let above = getBlockAtWorldPosition(worldPos.x, worldPos.y - BLOCK_SIZE);
     if (above) {
         if (above.blockType === block.blockType) {
             block.metaData.props.waterLevel = 0;
             block.cutoff = block.metaData.props.waterLevel;
         } else if (
-            GetBlock(above.blockType).air &&
+            getBlock(above.blockType).air &&
             block.metaData.props.isSource
         ) {
             block.metaData.props.waterLevel = 0; // As per original code.
@@ -283,18 +283,18 @@ function verticalCheckAbove(block, worldPos) {
 }
 
 function flowSideways(block, worldPos, direction) {
-    let target = GetBlockAtWorldPosition(
+    let target = getBlockAtWorldPosition(
         worldPos.x + direction.dx,
         worldPos.y + direction.dy,
     );
     // Check if the target is air or can be broken by fluid.
     if (
         target &&
-        (GetBlock(target.blockType).air ||
-            GetBlock(target.blockType).breakByFluid)
+        (getBlock(target.blockType).air ||
+            getBlock(target.blockType).breakByFluid)
     ) {
-        if (GetBlock(target.blockType).breakByFluid) {
-            target.breakBlock(GetBlock(target.blockType).dropWithoutTool);
+        if (getBlock(target.blockType).breakByFluid) {
+            target.breakBlock(getBlock(target.blockType).dropWithoutTool);
         }
         if (
             target.blockType === Blocks.Lava &&
@@ -333,8 +333,8 @@ class Block extends Square {
         super(
             new Transform(new Vector2(), new Vector2()),
             1,
-            GetBlock(blockType).sprite
-                ? getSpriteUrl("blocks/" + GetBlock(blockType).sprite)
+            getBlock(blockType).sprite
+                ? getSpriteUrl("blocks/" + getBlock(blockType).sprite)
                 : null,
             BLOCK_SIZE / 16,
             wall,
@@ -362,7 +362,7 @@ class Block extends Square {
             return;
         }
 
-        switch (GetBlock(this.blockType).specialType) {
+        switch (getBlock(this.blockType).specialType) {
             case SpecialType.RedstoneLamp:
                 this.lightSourceLevel = 8;
                 this.setState(1);
@@ -391,7 +391,7 @@ class Block extends Square {
             return;
         }
 
-        switch (GetBlock(this.blockType).specialType) {
+        switch (getBlock(this.blockType).specialType) {
             case SpecialType.RedstoneLamp:
                 this.lightSourceLevel = 0;
                 this.setState(0);
@@ -400,7 +400,7 @@ class Block extends Square {
     }
 
     setMetaData() {
-        const block = GetBlock(this.blockType);
+        const block = getBlock(this.blockType);
 
         let props = {};
         let storage = [];
@@ -418,7 +418,7 @@ class Block extends Square {
         }
 
         if (block.spawnerType !== null) {
-            props.spawnDelay = RandomRange(100, 300);
+            props.spawnDelay = randomRange(100, 300);
             props.spawnTimer = 0;
             props.spawnLimit = 3;
             props.spawnedMobs = [];
@@ -492,6 +492,7 @@ class Block extends Square {
                         new InventoryItem(),
                     ],
                 ];
+
                 break;
         }
 
@@ -518,7 +519,7 @@ class Block extends Square {
             },
         });
 
-        UploadChunkToServer(this.chunkX);
+        uploadChunkToServer(this.chunkX);
     }
 
     recieveSyncMetaData(metaData) {
@@ -565,7 +566,7 @@ class Block extends Square {
         if (existingIndex !== -1) updatingBlocks.splice(existingIndex, 1);
 
         this.blockType = blockType;
-        const block = GetBlock(blockType);
+        const block = getBlock(blockType);
 
         this.lightSourceLevel = block.lightLevel;
 
@@ -589,7 +590,7 @@ class Block extends Square {
         if (block.updateSpeed > 0 && !block.chunkUpdate)
             updatingBlocks.push(this);
 
-        this.drawOffset = block.grassOffset ? RandomRange(-2, 2) : 0;
+        this.drawOffset = block.grassOffset ? randomRange(-2, 2) : 0;
 
         this.cutoff = 0;
 
@@ -624,7 +625,7 @@ class Block extends Square {
     }
 
     update() {
-        const blockDef = GetBlock(this.blockType);
+        const blockDef = getBlock(this.blockType);
 
         if (blockDef.fluid) {
             this.updateSprite();
@@ -759,7 +760,7 @@ class Block extends Square {
         }
 
         // Check block above for storage (pulling items)
-        const above = GetBlockAtWorldPosition(
+        const above = getBlockAtWorldPosition(
             this.transform.position.x,
             this.transform.position.y - BLOCK_SIZE,
         );
@@ -770,7 +771,7 @@ class Block extends Square {
             above.metaData &&
             above.metaData.props &&
             above.metaData.props.storage &&
-            GetBlock(above.blockType).specialType !== SpecialType.Hopper // Skip if above is a hopper
+            getBlock(above.blockType).specialType !== SpecialType.Hopper // Skip if above is a hopper
         ) {
             const aboveStorage = above.metaData.props.storage;
 
@@ -851,7 +852,7 @@ class Block extends Square {
         }
 
         // Check block below for storage (pushing items)
-        const below = GetBlockAtWorldPosition(
+        const below = getBlockAtWorldPosition(
             this.transform.position.x,
             this.transform.position.y + BLOCK_SIZE,
         );
@@ -1006,7 +1007,7 @@ class Block extends Square {
         if (activeDimension !== this.dimensionIndex) return;
 
         const props = this.metaData.props;
-        const blockDef = GetBlock(this.blockType);
+        const blockDef = getBlock(this.blockType);
 
         // Clean up despawned or dead mobs from the tracking array
         props.spawnedMobs = props.spawnedMobs.filter(
@@ -1027,7 +1028,7 @@ class Block extends Square {
             for (let i = 0; i < spawnCount; i++)
                 this.spawnEntity(blockDef.spawnerType);
             props.spawnTimer = 0;
-            props.spawnDelay = RandomRange(100, 300);
+            props.spawnDelay = randomRange(100, 300);
         }
     }
 
@@ -1035,7 +1036,7 @@ class Block extends Square {
         const spawnPos = getBlockWorldPosition(this);
 
         // Add slight offset to prevent spawning directly inside the block
-        const offsetX = RandomRange(-BLOCK_SIZE / 2, BLOCK_SIZE / 2);
+        const offsetX = randomRange(-BLOCK_SIZE / 2, BLOCK_SIZE / 2);
 
         const entityType = Entities[entityTypeName];
 
@@ -1085,7 +1086,7 @@ class Block extends Square {
     }
 
     saplingGrow() {
-        const outcome = GetBlock(this.blockType).saplingOutcome;
+        const outcome = getBlock(this.blockType).saplingOutcome;
 
         if (!outcome) return;
 
@@ -1095,24 +1096,26 @@ class Block extends Square {
         if (!treeType) return;
 
         const randomVariant =
-            treeType.variants[RandomRange(0, treeType.variants.length)];
+            treeType.variants[randomRange(0, treeType.variants.length)];
 
-        GetChunkForX(this.chunkX).spawnTreeAt(
+        getChunkForX(this.chunkX).spawnTreeAt(
             randomVariant,
             this.x,
-            this.calculateY(),
+            this.getUserLocalY(),
         );
     }
 
-    calculateY() {
-        return CHUNK_HEIGHT - this.y - 1;
+    getUserLocalY() {
+        const chunk = getChunkForX(this.chunkX, this.dimensionIndex);
+        if (!chunk) return CHUNK_HEIGHT - this.y - 1;
+        return chunk.localYToUserY(this.y);
     }
 
     entityCollision(entity) {}
 
     // Callbacks for entities
     endEntityCollision(entity) {
-        switch (GetBlock(this.blockType).specialType) {
+        switch (getBlock(this.blockType).specialType) {
             case SpecialType.PressurePlate:
                 this.endPressurePlateLogic();
                 break;
@@ -1120,7 +1123,7 @@ class Block extends Square {
     }
 
     startEntityCollision(entity) {
-        switch (GetBlock(this.blockType).specialType) {
+        switch (getBlock(this.blockType).specialType) {
             case SpecialType.PressurePlate:
                 this.pressurePlateLogic();
                 break;
@@ -1141,13 +1144,13 @@ class Block extends Square {
     }
 
     endPressurePlateLogic() {
-        this.cutoff = GetBlock(this.blockType).defaultCutoff;
+        this.cutoff = getBlock(this.blockType).defaultCutoff;
 
         this.redstoneOutput = 0;
     }
 
     setState(index) {
-        const sprite = GetBlock(this.blockType).states[index];
+        const sprite = getBlock(this.blockType).states[index];
         this.setSprite(getSpriteUrl("blocks/" + sprite));
     }
 
@@ -1245,7 +1248,7 @@ class Block extends Square {
     }
 
     clicked(player) {
-        switch (GetBlock(this.blockType).specialType) {
+        switch (getBlock(this.blockType).specialType) {
             case SpecialType.NoteBlock:
                 this.playNote();
                 break;
@@ -1261,15 +1264,15 @@ class Block extends Square {
     }
 
     getSoundBasedOfBlockBelow() {
-        const blockBelow = GetBlockAtWorldPosition(
+        const blockBelow = getBlockAtWorldPosition(
             this.transform.position.x,
             this.transform.position.y + BLOCK_SIZE,
         );
 
         if (!blockBelow) return "harp";
 
-        if (GetBlock(blockBelow.blockType).noteBlockSound) {
-            return GetBlock(blockBelow.blockType).noteBlockSound;
+        if (getBlock(blockBelow.blockType).noteBlockSound) {
+            return getBlock(blockBelow.blockType).noteBlockSound;
         }
 
         return "harp";
@@ -1278,11 +1281,11 @@ class Block extends Square {
     interact(player) {
         const itemInHand = player.getSelectedSlotItem();
 
-        const block = GetBlock(this.blockType);
+        const block = getBlock(this.blockType);
 
         switch (block.specialType) {
             case SpecialType.Jukebox:
-                this.jukeBoxInteraction(GetItem(itemInHand.itemId), player);
+                this.jukeBoxInteraction(getItem(itemInHand.itemId), player);
                 break;
             case SpecialType.NoteBlock:
                 this.noteBlockInteraction();
@@ -1312,7 +1315,7 @@ class Block extends Square {
 
     redstoneDustUpdateState() {
         // Only run if this block is redstone dust.
-        const def = GetBlock(this.blockType);
+        const def = getBlock(this.blockType);
         if (def.specialType !== SpecialType.RedstoneDust) return;
 
         let connection = 1;
@@ -1322,14 +1325,14 @@ class Block extends Square {
         const bx = pos.x;
         const by = pos.y;
 
-        const north = GetBlockAtWorldPosition(bx, by - BLOCK_SIZE);
+        const north = getBlockAtWorldPosition(bx, by - BLOCK_SIZE);
 
         // For diagonal connections, we want to only consider them if the adjacent cardinal blocks are not blocking.
-        const northWest = GetBlockAtWorldPosition(
+        const northWest = getBlockAtWorldPosition(
             bx - BLOCK_SIZE,
             by - BLOCK_SIZE,
         );
-        const northEast = GetBlockAtWorldPosition(
+        const northEast = getBlockAtWorldPosition(
             bx + BLOCK_SIZE,
             by - BLOCK_SIZE,
         );
@@ -1338,26 +1341,26 @@ class Block extends Square {
         const isRedstoneDust = (block) => {
             return (
                 block &&
-                GetBlock(block.blockType).specialType ===
+                getBlock(block.blockType).specialType ===
                     SpecialType.RedstoneDust
             );
         };
 
         if (
             isRedstoneDust(northEast) &&
-            (north ? GetBlock(north.blockType).air : true)
+            (north ? getBlock(north.blockType).air : true)
         ) {
             connection = 3;
         }
         if (
             isRedstoneDust(northWest) &&
-            (north ? GetBlock(north.blockType).air : true)
+            (north ? getBlock(north.blockType).air : true)
         )
             connection = 2;
         if (
             isRedstoneDust(northEast) &&
             isRedstoneDust(northWest) &&
-            (north ? GetBlock(north.blockType).air : true)
+            (north ? getBlock(north.blockType).air : true)
         )
             connection = 4;
 
@@ -1419,10 +1422,10 @@ class Block extends Square {
     checkLavaWaterInteraction(pos) {
         // Check for lava-water interaction.
         // Check for blocks surrounding this block
-        const left = GetBlockAtWorldPosition(pos.x - BLOCK_SIZE, pos.y);
-        const right = GetBlockAtWorldPosition(pos.x + BLOCK_SIZE, pos.y);
-        const above = GetBlockAtWorldPosition(pos.x, pos.y - BLOCK_SIZE);
-        const below = GetBlockAtWorldPosition(pos.x, pos.y + BLOCK_SIZE);
+        const left = getBlockAtWorldPosition(pos.x - BLOCK_SIZE, pos.y);
+        const right = getBlockAtWorldPosition(pos.x + BLOCK_SIZE, pos.y);
+        const above = getBlockAtWorldPosition(pos.x, pos.y - BLOCK_SIZE);
+        const below = getBlockAtWorldPosition(pos.x, pos.y + BLOCK_SIZE);
 
         let lavaBlocksNear = [];
 
@@ -1466,7 +1469,7 @@ class Block extends Square {
         }
 
         // Only process if this block is fluid.
-        if (!GetBlock(this.blockType).fluid) return;
+        if (!getBlock(this.blockType).fluid) return;
 
         // Initialize water properties if undefined.
         if (
@@ -1555,7 +1558,7 @@ class Block extends Square {
     }
 
     getSlotItem(item) {
-        return item.blockId ? GetBlock(item.blockId) : GetItem(item.itemId);
+        return item.blockId ? getBlock(item.blockId) : getItem(item.itemId);
     }
 
     resetProgression() {
@@ -1563,17 +1566,17 @@ class Block extends Square {
     }
 
     blockUpdate() {
-        const blockDef = GetBlock(this.blockType);
+        const blockDef = getBlock(this.blockType);
 
         // Check for blocks that should break if they don't have a solid block underneath
         if (blockDef.breakWithoutBlockUnderneath || blockDef.fall) {
-            const blockBelow = GetBlockAtWorldPosition(
+            const blockBelow = getBlockAtWorldPosition(
                 this.transform.position.x,
                 this.transform.position.y + BLOCK_SIZE,
             );
 
             // No block below
-            if (!blockBelow || GetBlock(blockBelow.blockType).air) {
+            if (!blockBelow || getBlock(blockBelow.blockType).air) {
                 if (blockDef.fall) {
                     this.gravityBlock();
                 } else {
@@ -1584,7 +1587,7 @@ class Block extends Square {
     }
 
     breakBlock(drop = false, wall = false) {
-        if (GetBlock(this.blockType).air) return;
+        if (getBlock(this.blockType).air) return;
 
         const chunk = getDimensionChunks(activeDimension).get(this.chunkX);
 
@@ -1592,7 +1595,7 @@ class Block extends Square {
 
         // if (!wall) chunk.checkForBlockWithAirBeneath(this.x, this.y);
 
-        const blockDef = GetBlock(this.blockType);
+        const blockDef = getBlock(this.blockType);
 
         // Handle crop loot when fully grown
         if (blockDef.cropOutcome) {
@@ -1605,7 +1608,7 @@ class Block extends Square {
 
         if (this.linkedBlocks && this.linkedBlocks.length > 1) {
             for (let block of this.linkedBlocks) {
-                const blockAtPos = GetBlockAtWorldPosition(block.x, block.y);
+                const blockAtPos = getBlockAtWorldPosition(block.x, block.y);
 
                 if (blockAtPos && blockAtPos !== this) {
                     if (blockAtPos.blockType === block.blockType)
@@ -1638,7 +1641,7 @@ class Block extends Square {
     }
 
     playBreakParticles() {
-        const blockDef = GetBlock(this.blockType);
+        const blockDef = getBlock(this.blockType);
 
         if (!blockDef.iconSprite) return;
 
@@ -1672,7 +1675,7 @@ class Block extends Square {
             summonEntity(
                 Drop,
                 new Vector2(
-                    this.transform.position.x + RandomRange(0, BLOCK_SIZE / 3),
+                    this.transform.position.x + randomRange(0, BLOCK_SIZE / 3),
                     this.transform.position.y + BLOCK_SIZE / 4,
                 ),
                 {
@@ -1695,11 +1698,11 @@ class Block extends Square {
     }
 
     playBreakSound() {
-        const soundArray = GetBlock(this.blockType).breakSound;
+        const soundArray = getBlock(this.blockType).breakSound;
 
         if (!soundArray) return;
 
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: soundArray,
             positional: true,
             origin: getBlockWorldPosition(this),
@@ -1707,7 +1710,7 @@ class Block extends Square {
     }
 
     dropTable() {
-        const block = GetBlock(this.blockType);
+        const block = getBlock(this.blockType);
 
         const loot = block.dropTable.getRandomLoot();
 
@@ -1715,7 +1718,7 @@ class Block extends Square {
             summonEntity(
                 Drop,
                 new Vector2(
-                    this.transform.position.x + RandomRange(0, BLOCK_SIZE / 3),
+                    this.transform.position.x + randomRange(0, BLOCK_SIZE / 3),
                     this.transform.position.y + BLOCK_SIZE / 4,
                 ),
                 {
@@ -1730,7 +1733,7 @@ class Block extends Square {
     dropBlock() {
         if (!GAMERULES.doTileDrops) return;
 
-        const block = GetBlock(this.blockType);
+        const block = getBlock(this.blockType);
 
         let props = {};
         if (this.wall) {
@@ -1740,7 +1743,7 @@ class Block extends Square {
         summonEntity(
             Drop,
             new Vector2(
-                this.transform.position.x + RandomRange(0, BLOCK_SIZE / 3),
+                this.transform.position.x + randomRange(0, BLOCK_SIZE / 3),
                 this.transform.position.y + BLOCK_SIZE / 4,
             ),
             {
@@ -1762,7 +1765,7 @@ class Block extends Square {
                     Drop,
                     new Vector2(
                         this.transform.position.x +
-                            RandomRange(0, BLOCK_SIZE / 3),
+                            randomRange(0, BLOCK_SIZE / 3),
                         this.transform.position.y + BLOCK_SIZE / 4,
                     ),
                     {
@@ -1777,7 +1780,7 @@ class Block extends Square {
     }
 
     updateSprite() {
-        const block = GetBlock(this.blockType);
+        const block = getBlock(this.blockType);
 
         if (block.air) {
             this.alpha = 0;
@@ -1799,6 +1802,6 @@ class Block extends Square {
     }
 }
 
-function GetBlock(blockId) {
+function getBlock(blockId) {
     return blockMap.has(blockId) ? blockMap.get(blockId) : 0;
 }

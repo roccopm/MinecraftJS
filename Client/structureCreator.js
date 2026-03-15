@@ -48,6 +48,7 @@ const sizeOptions = [
     { value: "32x32", rows: 32, cols: 32 },
     { value: "64x64", rows: 64, cols: 64 },
 ];
+
 sizeOptions.forEach((option) => {
     const opt = document.createElement("option");
     opt.value = `${option.rows}x${option.cols}`;
@@ -76,7 +77,7 @@ function drawGrid() {
             const cell = wallsGrid[r][c];
             if (cell !== Blocks.Air) {
                 if (typeof cell === "number") {
-                    const block = GetBlock(cell);
+                    const block = getBlock(cell);
                     if (block && block.sprite) {
                         const img = new Image();
                         img.src =
@@ -86,7 +87,7 @@ function drawGrid() {
                             c * cellSize,
                             r * cellSize,
                             cellSize,
-                            cellSize
+                            cellSize,
                         );
                         ctx.globalAlpha = 0.5;
                         ctx.fillStyle = "black";
@@ -94,7 +95,7 @@ function drawGrid() {
                             c * cellSize,
                             r * cellSize,
                             cellSize,
-                            cellSize
+                            cellSize,
                         );
                         ctx.globalAlpha = 1;
                     } else {
@@ -103,7 +104,7 @@ function drawGrid() {
                             c * cellSize,
                             r * cellSize,
                             cellSize,
-                            cellSize
+                            cellSize,
                         );
                     }
                 } else if (typeof cell === "string") {
@@ -114,7 +115,7 @@ function drawGrid() {
                         c * cellSize,
                         r * cellSize,
                         cellSize,
-                        cellSize
+                        cellSize,
                     );
                 }
             }
@@ -127,7 +128,7 @@ function drawGrid() {
             const cell = structureGrid[r][c];
             if (cell !== Blocks.Air) {
                 if (typeof cell === "number") {
-                    const block = GetBlock(cell);
+                    const block = getBlock(cell);
                     if (block && block.sprite) {
                         const img = new Image();
                         img.src =
@@ -137,7 +138,7 @@ function drawGrid() {
                             c * cellSize,
                             r * cellSize,
                             cellSize,
-                            cellSize
+                            cellSize,
                         );
                     } else {
                         ctx.fillStyle = "#aaa";
@@ -146,7 +147,7 @@ function drawGrid() {
                             c * cellSize,
                             r * cellSize,
                             cellSize,
-                            cellSize
+                            cellSize,
                         );
                         ctx.globalAlpha = 1;
                     }
@@ -158,7 +159,7 @@ function drawGrid() {
                         c * cellSize,
                         r * cellSize,
                         cellSize,
-                        cellSize
+                        cellSize,
                     );
                 }
             }
@@ -299,7 +300,7 @@ sortedBlocks.forEach((block) => {
     const item = createPaletteItem(
         name + " - " + block.blockId,
         imgSrc,
-        block.blockId
+        block.blockId,
     );
     if (block.blockId === activeBlockId) item.classList.add("selected");
     paletteContainer.appendChild(item);
@@ -400,7 +401,7 @@ function updateSavedBuildsList() {
                     "Build is too large for current grid size! Should be " +
                         buildRows +
                         "x" +
-                        buildCols
+                        buildCols,
                 );
                 return;
             }
@@ -473,7 +474,7 @@ function getBlockAverageColor(block, fallbackColor = "#ffffff") {
 function generatePreviewCanvas(
     buildData,
     previewWidth = 64,
-    previewHeight = 64
+    previewHeight = 64,
 ) {
     const previewCanvas = document.createElement("canvas");
     previewCanvas.width = previewWidth;
@@ -493,15 +494,15 @@ function generatePreviewCanvas(
 
             let fillColor = "#74b3ff";
 
-            if (!GetBlock(wallCell).air) {
-                fillColor = getBlockAverageColor(GetBlock(wallCell), "#74b3ff");
+            if (!getBlock(wallCell).air) {
+                fillColor = getBlockAverageColor(getBlock(wallCell), "#74b3ff");
 
                 pctx.fillStyle = fillColor;
                 pctx.fillRect(c * cellW, r * cellH, cellW, cellH);
             }
 
             if (typeof cell === "number") {
-                const block = GetBlock(cell);
+                const block = getBlock(cell);
                 if (block && block.name && !block.air) {
                     fillColor = getBlockAverageColor(block, "#74b3ff");
                 }
@@ -558,12 +559,12 @@ document.getElementById("exportBtn").addEventListener("click", () => {
                 if (typeof cell === "string") {
                     return cell;
                 } else {
-                    const block = GetBlock(cell);
+                    const block = getBlock(cell);
                     return block
                         ? "Blocks." + block.name.replace(/\s+/g, "")
                         : cell;
                 }
-            })
+            }),
         );
 
     const trimmedNamesBlocks = convertGrid(trimmedBlocks);
@@ -675,7 +676,7 @@ if (buildDataParam) {
             "Build is too large for current grid size! Should be " +
                 buildRows +
                 "x" +
-                buildCols
+                buildCols,
         );
     } else {
         initializeGrids(gridRows, gridCols); // Reset current grid

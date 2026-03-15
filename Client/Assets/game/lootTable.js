@@ -21,9 +21,9 @@ class LootTable {
         const loot = [];
         if (this.items.length === 0) return loot;
         this.items.forEach((item) => {
-            const count = RandomRange(
+            const count = randomRange(
                 item.maxCount - item.subtract,
-                item.maxCount + 1
+                item.maxCount + 1,
             );
 
             if (count > 0) {
@@ -32,7 +32,7 @@ class LootTable {
                         blockId: item.blockId,
                         itemId: item.itemId,
                         count: count,
-                    })
+                    }),
                 );
             }
         });

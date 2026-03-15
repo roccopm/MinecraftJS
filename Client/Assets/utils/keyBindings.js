@@ -198,7 +198,6 @@ function getActionLabel(action) {
 
 function loadKeyBindings() {
     try {
-        
         const raw = localStorage.getItem("keyBindings");
         if (!raw) return { ...DEFAULT_KEY_BINDINGS };
         const parsed = JSON.parse(raw);

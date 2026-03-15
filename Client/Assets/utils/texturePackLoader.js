@@ -11,7 +11,7 @@ async function loadVanillaTextures() {
 
     // Loop through Blocks
     for (const blockKey in Blocks) {
-        const block = GetBlock(Blocks[blockKey]);
+        const block = getBlock(Blocks[blockKey]);
         if (block.iconSprite) {
             spritePaths.push(`blocks/${block.iconSprite}`);
         }
@@ -19,7 +19,7 @@ async function loadVanillaTextures() {
 
     // Loop through Items
     for (const itemKey in Items) {
-        const item = GetItem(Items[itemKey]);
+        const item = getItem(Items[itemKey]);
         if (item.sprite) {
             spritePaths.push(`items/${item.sprite}`);
         }
@@ -108,7 +108,7 @@ async function loadVanillaTextures() {
                     averageColor: { r: 0, g: 0, b: 0 },
                 };
             }
-        })
+        }),
     );
 }
 
@@ -130,11 +130,11 @@ async function loadTexturePack() {
 
     try {
         const texturePackData = await getFromLdb(
-            `texturePack_${currentPackKey}`
+            `texturePack_${currentPackKey}`,
         );
         if (!texturePackData) {
             console.warn(
-                `No texture pack found for key: ${currentPackKey}, using default.`
+                `No texture pack found for key: ${currentPackKey}, using default.`,
             );
             texturePackZip = null;
             texturePackFiles = null;
@@ -187,7 +187,7 @@ async function loadTexturePack() {
                         resolve();
                     };
                 });
-            })
+            }),
         );
 
         isTexturePackLoaded = true;
@@ -324,7 +324,7 @@ async function getAverageColor(img) {
             0,
             0,
             bitmap.width,
-            bitmap.height
+            bitmap.height,
         ).data;
         let r = 0,
             g = 0,

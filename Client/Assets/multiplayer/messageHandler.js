@@ -16,12 +16,12 @@ function processMessage(data) {
             break;
         case "playerJoined":
             console.log(data);
-            const newPlayer = SpawnPlayer(
+            const newPlayer = spawnPlayer(
                 new Vector2(0, (CHUNK_HEIGHT / 2) * BLOCK_SIZE),
                 false,
                 message.player.UUID,
                 message.player.name,
-                false
+                false,
             );
             newPlayer.setSkin(message.player.skin);
             break;
@@ -40,11 +40,11 @@ function processMessage(data) {
             break;
         case "uploadChunk":
             console.log("Received chunk:", message);
-            LoadChunk(message.x, message.chunk);
+            loadChunk(message.x, message.chunk);
             break;
         case "seed":
             console.log("Received seed:", message);
-            LoadCustomSeed(message);
+            loadCustomSeed(message);
             break;
         case "removeEntity":
             console.log("Removing entity:", message);
@@ -60,7 +60,7 @@ function processMessage(data) {
                 message.position,
                 message.props,
                 false,
-                message.UUID
+                message.UUID,
             );
             return;
 
@@ -89,7 +89,7 @@ function processMessage(data) {
                     message.gamemode <= 3 &&
                     message.gamemode >= 0
                     ? message.gamemode
-                    : 0
+                    : 0,
             );
 
             playerFromFile.dimension = message.dimension
@@ -98,7 +98,7 @@ function processMessage(data) {
 
             playerFromFile.position = new Vector2(
                 message.position.x ? message.position.x : 0,
-                message.position.y ? message.position.y : 0
+                message.position.y ? message.position.y : 0,
             );
 
             playerFromFile.health = message.health ? message.health : 20;
@@ -115,7 +115,7 @@ function processMessage(data) {
                 console.log(
                     "Chunk not loaded:",
                     message.chunkX,
-                    message.dimensionIndex
+                    message.dimensionIndex,
                 );
                 return;
             }
@@ -124,14 +124,13 @@ function processMessage(data) {
 
             getDimensionChunks(message.dimensionIndex)
                 .get(message.chunkX)
-                .setBlockType(
+                .setBlockTypeLocal(
                     message.x,
                     message.y,
                     message.blockType,
                     message.isWall,
                     null,
-                    false,
-                    true
+                    true,
                 );
             break;
         case "breakBlock":
@@ -141,7 +140,7 @@ function processMessage(data) {
                 console.log(
                     "Chunk not loaded:",
                     message.chunkX,
-                    message.dimensionIndex
+                    message.dimensionIndex,
                 );
                 return;
             }
@@ -151,7 +150,7 @@ function processMessage(data) {
             // get the block at the given coordinates
             const block = getDimensionChunks(message.dimensionIndex)
                 .get(message.chunkX)
-                .getBlock(message.x, message.y, false, message.isWall);
+                .getBlockLocal(message.x, message.y, message.isWall);
 
             if (!block) console.log("Block not found:", message.x, message.y);
 
@@ -163,12 +162,12 @@ function processMessage(data) {
 
         case "syncMetaData":
             const chunk = getDimensionChunks(message.dimensionIndex)?.get(
-                message.chunkX
+                message.chunkX,
             );
 
             if (!chunk) break;
 
-            const blockToChange = chunk.getBlock(message.x, message.y, false);
+            const blockToChange = chunk.getBlockLocal(message.x, message.y);
 
             if (!blockToChange) break;
 
@@ -210,11 +209,11 @@ async function iJoined(player, existingPlayers, gamemode = 0) {
         await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    const myPlayer = SpawnPlayer(
+    const myPlayer = spawnPlayer(
         new Vector2(0, (CHUNK_HEIGHT / 2) * BLOCK_SIZE),
         true,
         player.UUID,
-        settings.username
+        settings.username,
     );
 
     myPlayer.setGamemode(gamemode);
@@ -235,12 +234,12 @@ async function iJoined(player, existingPlayers, gamemode = 0) {
     // Spawn all existing players for the new player
     if (existingPlayers && existingPlayers.length > 0) {
         existingPlayers.forEach((p) => {
-            const newPlayer = SpawnPlayer(
+            const newPlayer = spawnPlayer(
                 new Vector2(0, (CHUNK_HEIGHT / 2) * BLOCK_SIZE),
                 false,
                 p.UUID,
                 p.name,
-                false
+                false,
             );
 
             newPlayer.dimension = p.dimension;
@@ -256,7 +255,7 @@ function handleEntityRPC(data) {
         entity[data.message.method](...data.message.args);
     } else {
         console.warn(
-            `Entity ${data.UUID} does not have method ${data.message.method}`
+            `Entity ${data.UUID} does not have method ${data.message.method}`,
         );
     }
 }

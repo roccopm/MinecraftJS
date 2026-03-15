@@ -10,7 +10,7 @@ class InventoryItem {
 
     init() {
         if (this.itemId !== null) {
-            const item = GetItem(this.itemId);
+            const item = getItem(this.itemId);
 
             if (item.durability) {
                 if (!this.hasProp("durability"))
@@ -90,8 +90,8 @@ class InventorySlot {
 
         const isItem = item.itemId !== null;
         const path = isItem
-            ? "items/" + GetItem(item.itemId).sprite
-            : "blocks/" + GetBlock(item.blockId).iconSprite;
+            ? "items/" + getItem(item.itemId).sprite
+            : "blocks/" + getBlock(item.blockId).iconSprite;
 
         const spritePath = getSpriteUrl(path);
         const spriteSize = getSpriteSize(path);
@@ -100,7 +100,7 @@ class InventorySlot {
 
         // Get the default cutoff for block
         let cutoff = 0;
-        if (item.blockId) cutoff = GetBlock(item.blockId).defaultCutoff || 0;
+        if (item.blockId) cutoff = getBlock(item.blockId).defaultCutoff || 0;
 
         // Calculate the height to draw based on cutoff
         const drawHeight = actualHeight - cutoff * actualHeight;
@@ -147,7 +147,7 @@ class InventorySlot {
         // Draw durability bar
         if (item.hasProp("durability")) {
             const durability = item.getProp("durability");
-            const itemDef = GetItem(item.itemId);
+            const itemDef = getItem(item.itemId);
 
             if (durability < itemDef.durability) {
                 const maxWidth = 45 * size;
@@ -157,8 +157,8 @@ class InventorySlot {
                     durability > itemDef.durability / 2
                         ? "rgba(0, 255, 0)"
                         : durability > itemDef.durability / 4
-                        ? "rgba(255, 255, 0)"
-                        : "rgba(255, 0, 0)";
+                          ? "rgba(255, 255, 0)"
+                          : "rgba(255, 0, 0)";
 
                 drawRect({
                     x: slotX + 2 * size,

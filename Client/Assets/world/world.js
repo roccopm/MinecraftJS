@@ -64,7 +64,7 @@ function globalRecalculateRedstone() {
     for (const chunk of chunks_in_render_distance.values()) {
         for (let row of chunk.blocks) {
             for (let block of row) {
-                const def = GetBlock(block.blockType);
+                const def = getBlock(block.blockType);
                 if (def.specialType === SpecialType.RedstoneDust) {
                     // Reset dust power.
                     block.redstoneOutput = 0;
@@ -91,7 +91,7 @@ function globalRecalculateRedstone() {
     for (const chunk of chunks_in_render_distance.values()) {
         for (let row of chunk.blocks) {
             for (let block of row) {
-                const def = GetBlock(block.blockType);
+                const def = getBlock(block.blockType);
                 // For constant sources, their redstoneOutput is already set.
                 if (block.redstoneOutput && block.redstoneOutput > 0) {
                     queue.push({
@@ -116,7 +116,7 @@ function globalRecalculateRedstone() {
     // 3. Propagate redstone power via flood-fill.
     while (queue.length > 0) {
         const { globalX, globalY } = queue.shift();
-        const block = GetBlockAtWorldPosition(globalX, globalY, false);
+        const block = getBlockAtWorldPosition(globalX, globalY, false);
         if (!block) continue;
         const currentPower = block.redstoneOutput;
         if (currentPower <= 1) continue; // Cannot propagate further
@@ -124,9 +124,9 @@ function globalRecalculateRedstone() {
         for (const offset of offsets) {
             const nx = globalX + offset.dx;
             const ny = globalY + offset.dy;
-            const neighbor = GetBlockAtWorldPosition(nx, ny, false);
+            const neighbor = getBlockAtWorldPosition(nx, ny, false);
             if (!neighbor) continue;
-            const nDef = GetBlock(neighbor.blockType);
+            const nDef = getBlock(neighbor.blockType);
             if (nDef.specialType !== SpecialType.RedstoneDust) continue;
             const candidatePower = currentPower - 1;
             if (candidatePower > neighbor.redstoneOutput) {
@@ -160,10 +160,10 @@ function globalRecalculateRedstone() {
                 const globalX = block.transform.position.x;
                 const globalY = block.transform.position.y;
                 for (const off of neighborOffsets) {
-                    const nb = GetBlockAtWorldPosition(
+                    const nb = getBlockAtWorldPosition(
                         globalX + off.dx,
                         globalY + off.dy,
-                        false
+                        false,
                     );
                     if (nb && nb.redstoneOutput > 0) {
                         powered = true;
@@ -221,14 +221,14 @@ function globalRecalculateLight() {
         for (const offset of offsets) {
             const nx = currentPosX + offset.dx * BLOCK_SIZE;
             const ny = currentPosY + offset.dy * BLOCK_SIZE;
-            const neighbor = GetBlockAtWorldPosition(nx, ny, false);
+            const neighbor = getBlockAtWorldPosition(nx, ny, false);
             if (!neighbor) continue;
 
             // Exponential decay: reduce light by a factor (e.g., 0.5)
             const decayFactor = 0.8; // Adjust this value to control the steepness of the curve
             const newLight = Math.max(
                 1,
-                Math.floor(currentLevel * decayFactor)
+                Math.floor(currentLevel * decayFactor),
             ); // Ensure it doesn't go below 1
 
             if (neighbor.lightLevel < newLight) {
@@ -256,7 +256,7 @@ function updateBlocks() {
         // }
 
         // Get the updateSpeed for this block.
-        let speed = GetBlock(block.blockType).updateSpeed; // e.g., 1 or 0.5
+        let speed = getBlock(block.blockType).updateSpeed; // e.g., 1 or 0.5
 
         // Initialize an accumulator property if it doesn't exist.
         if (block._updateAccumulator === undefined) {

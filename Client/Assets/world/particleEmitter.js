@@ -46,12 +46,12 @@ class ParticleEmitter {
             const speed = Math.random() * 2 * this.speed; // Random speed
 
             const particleX =
-                this.x + Math.cos(angle) + RandomRange(-this.range, this.range);
+                this.x + Math.cos(angle) + randomRange(-this.range, this.range);
             const particleY =
-                this.y + Math.sin(angle) + RandomRange(-this.range, this.range);
+                this.y + Math.sin(angle) + randomRange(-this.range, this.range);
 
             const scale = this.randomScale
-                ? RandomRange(this.scale - 2, this.scale + 2) / 10
+                ? randomRange(this.scale - 2, this.scale + 2) / 10
                 : this.scale;
 
             const particle = new Particle(
@@ -81,7 +81,7 @@ class ParticleEmitter {
     }
 
     getLightLevel() {
-        return GetBlockAtWorldPosition(this.x, this.y)?.lightLevel;
+        return getBlockAtWorldPosition(this.x, this.y)?.lightLevel;
     }
 
     emitBurst() {

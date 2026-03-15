@@ -17,7 +17,7 @@ function createExplosion(
         destroyTerrain = true,
     } = {},
 ) {
-    PlayRandomSoundFromArray({
+    playRandomSoundFromArray({
         array: Sounds.Explosion,
         positional: true,
         origin: position,
@@ -70,10 +70,10 @@ function createExplosion(
         if (visited.has(key)) continue;
         visited.add(key);
 
-        const block = GetBlockAtWorldPosition(worldX, worldY);
+        const block = getBlockAtWorldPosition(worldX, worldY);
         if (!block) continue;
 
-        const blockDef = GetBlock(block.blockType);
+        const blockDef = getBlock(block.blockType);
         if (!blockDef) continue;
 
         const resistance = blockDef.hardness || 0;

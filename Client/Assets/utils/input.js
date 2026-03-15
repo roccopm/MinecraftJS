@@ -29,20 +29,20 @@ class InputHandler {
 
     _initializeEventListeners() {
         document.addEventListener("keydown", (event) =>
-            this._handleKeyDown(event)
+            this._handleKeyDown(event),
         );
         document.addEventListener("keyup", (event) => this._handleKeyUp(event));
         document.addEventListener("mousedown", (event) =>
-            this._handleMouseDown(event)
+            this._handleMouseDown(event),
         );
         document.addEventListener("mouseup", (event) =>
-            this._handleMouseUp(event)
+            this._handleMouseUp(event),
         );
         document.addEventListener("mousemove", (event) =>
-            this._handleMouseMove(event)
+            this._handleMouseMove(event),
         );
         document.addEventListener("wheel", (event) =>
-            this._handleScroll(event)
+            this._handleScroll(event),
         );
     }
 
@@ -65,9 +65,15 @@ class InputHandler {
             }
             this.keys[key] = true; // Keep keys set to true as long as the key is held down
             if (typeof chat !== "undefined" && !chat.inChat) {
-                if (this.keyBindings.chatOpen && this.keyBindings.chatOpen.includes(key)) {
+                if (
+                    this.keyBindings.chatOpen &&
+                    this.keyBindings.chatOpen.includes(key)
+                ) {
                     chat.openChat();
-                } else if (this.keyBindings.chatCommand && this.keyBindings.chatCommand.includes(key)) {
+                } else if (
+                    this.keyBindings.chatCommand &&
+                    this.keyBindings.chatCommand.includes(key)
+                ) {
                     chat.currentMessage = "/";
                     chat.cursorPosition = 1;
                     chat.openChat();

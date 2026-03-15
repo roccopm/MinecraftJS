@@ -51,6 +51,6 @@ class Item {
     }
 }
 
-function GetItem(itemId) {
+function getItem(itemId) {
     return itemMap.has(itemId) ? itemMap.get(itemId) : null;
 }

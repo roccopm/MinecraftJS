@@ -93,7 +93,7 @@ class Sheep extends Mob {
         if (!this.damage(damage)) return;
 
         this.knockBack(hitfromX, kb);
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Sheep_Say,
             positional: true,
             origin: this.position,
@@ -106,7 +106,7 @@ class Sheep extends Mob {
 
         summonEntity(Drop, new Vector2(this.position.x, this.position.y), {
             blockId: Blocks.WhiteWool,
-            count: RandomRange(1, 3),
+            count: randomRange(1, 3),
         });
 
         player.reduceDurability();
@@ -118,7 +118,7 @@ class Sheep extends Mob {
 
     dieEvent() {
         this.dropLoot();
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Sheep_Say,
             positional: true,
             origin: this.position,

@@ -31,7 +31,7 @@ class Mob extends Entity {
             forceDirection: true,
             stepSize: stepSize,
             footstepSounds: footstepSounds,
-            direction: RandomRange(0, 2) ? 1 : -1,
+            direction: randomRange(0, 2) ? 1 : -1,
             maxVelocity: new Vector2(speed * BLOCK_SIZE * 1.5, 1000),
             myChunkX: myChunkX,
         });
@@ -45,11 +45,11 @@ class Mob extends Entity {
         this.ambientSounds = ambientSounds;
         this.ambientSoundCounter = 0;
         this.ambientSoundRange = ambientSoundRange;
-        this.ambientSoundTarget = RandomRange(
+        this.ambientSoundTarget = randomRange(
             this.ambientSoundRange.min,
-            this.ambientSoundRange.max
+            this.ambientSoundRange.max,
         );
-        this.randomMoveTime = RandomRange(0, ai.moveTimeRange.max / 2);
+        this.randomMoveTime = randomRange(0, ai.moveTimeRange.max / 2);
         this.moving = false;
 
         this.lootTable = lootTable;
@@ -149,12 +149,12 @@ class Mob extends Entity {
 
         if (this.ambientSoundCounter >= this.ambientSoundTarget) {
             this.ambientSoundCounter = 0;
-            this.ambientSoundTarget = RandomRange(
+            this.ambientSoundTarget = randomRange(
                 this.ambientSoundRange.min,
-                this.ambientSoundRange.max
+                this.ambientSoundRange.max,
             );
 
-            PlayRandomSoundFromArray({
+            playRandomSoundFromArray({
                 array: this.ambientSounds,
                 positional: true,
                 origin: this.position,
@@ -203,14 +203,14 @@ class Mob extends Entity {
                 Drop,
                 new Vector2(
                     this.position.x +
-                        RandomRange(-this.hitbox.x, this.hitbox.x),
-                    this.position.y
+                        randomRange(-this.hitbox.x, this.hitbox.x),
+                    this.position.y,
                 ),
                 {
                     blockId: item.blockId,
                     itemId: item.itemId,
                     count: item.count,
-                }
+                },
             );
         });
     }
@@ -223,15 +223,15 @@ class Mob extends Entity {
 
     resetMoveTime() {
         this.timeLastMoved = 0;
-        this.randomMoveTime = RandomRange(
+        this.randomMoveTime = randomRange(
             this.ai.moveTimeRange.min,
-            this.ai.moveTimeRange.max
+            this.ai.moveTimeRange.max,
         );
     }
 
     moveToRandomX() {
         this.moving = true;
-        this.direction = RandomRange(0, 2) == 1 ? 1 : -1;
+        this.direction = randomRange(0, 2) == 1 ? 1 : -1;
         this.resetMoveTime();
     }
 }

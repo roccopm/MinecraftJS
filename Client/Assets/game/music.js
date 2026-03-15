@@ -20,7 +20,7 @@ const songs = [
 ];
 
 function playRandomSong() {
-    let randomSongIndex = RandomRange(0, songs.length);
+    let randomSongIndex = randomRange(0, songs.length);
     let randomSongUrl = "Assets/audio/music/" + songs[randomSongIndex] + ".ogg";
 
     musicPlayer.src = randomSongUrl;
@@ -33,7 +33,7 @@ function playRandomSong() {
     musicPlayer.onended = () => {
         isPlaying = false;
         let delay =
-            RandomRange(musicBetweenDelay.min, musicBetweenDelay.max) * 1000;
+            randomRange(musicBetweenDelay.min, musicBetweenDelay.max) * 1000;
         setTimeout(playRandomSong, delay);
     };
 }
@@ -42,7 +42,7 @@ function startMusic() {
     if (isPlaying) return;
 
     let startDelay =
-        RandomRange(musicStartDelayRange.min, musicStartDelayRange.max) * 1000;
+        randomRange(musicStartDelayRange.min, musicStartDelayRange.max) * 1000;
     setTimeout(playRandomSong, startDelay);
 }
 
