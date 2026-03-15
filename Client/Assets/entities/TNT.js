@@ -17,12 +17,12 @@ class TNT extends Entity {
             name: "TNT",
             position: new Vector2(
                 position.x + BLOCK_SIZE / 20,
-                position.y + BLOCK_SIZE / 20
+                position.y + BLOCK_SIZE / 20,
             ),
             sprite: sprite,
             hitbox: new Vector2(
                 BLOCK_SIZE - BLOCK_SIZE / 16,
-                BLOCK_SIZE - BLOCK_SIZE / 16
+                BLOCK_SIZE - BLOCK_SIZE / 16,
             ),
             spriteScale: spriteScale, // Dynamically calculated sprite scale
             canSwim: false,

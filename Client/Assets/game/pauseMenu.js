@@ -1,7 +1,9 @@
 class PauseMenu {
     constructor() {
         this.container = document.querySelector("#pause-menu");
-        this.pages = Array.from(document.querySelectorAll(".pause-menu-page[data-page]"));
+        this.pages = Array.from(
+            document.querySelectorAll(".pause-menu-page[data-page]"),
+        );
         this.root = document.querySelector(":root");
 
         this._page = 0; // 0 = closed, 1+ = current page number

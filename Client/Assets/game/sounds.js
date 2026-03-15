@@ -16,18 +16,21 @@ const Sounds = Object.freeze({
         "step/grass5",
         "step/grass6",
     ],
+
     Breaking_Cloth: [
         "step/cloth1",
         "step/cloth2",
         "step/cloth3",
         "step/cloth4",
     ],
+
     Breaking_Gravel: [
         "step/gravel1",
         "step/gravel2",
         "step/gravel3",
         "step/gravel4",
     ],
+
     Breaking_Sand: [
         "step/sand1",
         "step/sand2",
@@ -35,6 +38,7 @@ const Sounds = Object.freeze({
         "step/sand4",
         "step/sand5",
     ],
+
     Breaking_Snow: ["step/snow1", "step/snow2", "step/snow3", "step/snow4"],
     Breaking_Stone: [
         "step/stone1",
@@ -44,6 +48,7 @@ const Sounds = Object.freeze({
         "step/stone5",
         "step/stone6",
     ],
+
     Breaking_Wood: [
         "step/wood1",
         "step/wood2",
@@ -64,18 +69,21 @@ const Sounds = Object.freeze({
         "mobs/pig/step4",
         "mobs/pig/step5",
     ],
+
     Cow_Say: [
         "mobs/cow/say1",
         "mobs/cow/say2",
         "mobs/cow/say3",
         "mobs/cow/say4",
     ],
+
     Cow_Step: [
         "mobs/cow/step1",
         "mobs/cow/step2",
         "mobs/cow/step3",
         "mobs/cow/step4",
     ],
+
     Cow_Hurt: ["mobs/cow/hurt1", "mobs/cow/hurt2", "mobs/cow/hurt3"],
 
     Zombie_Say: ["mobs/zombie/say1", "mobs/zombie/say2", "mobs/zombie/say3"],
@@ -86,6 +94,7 @@ const Sounds = Object.freeze({
         "mobs/zombie/step4",
         "mobs/zombie/step5",
     ],
+
     Zombie_Hurt: ["mobs/zombie/hurt1", "mobs/zombie/hurt2"],
 
     Sheep_Say: ["mobs/sheep/say1", "mobs/sheep/say2", "mobs/sheep/say3"],
@@ -148,7 +157,7 @@ function preloadSounds() {
 preloadSounds();
 
 // Play a random sound from an array
-function PlayRandomSoundFromArray({
+function playRandomSoundFromArray({
     array,
     pathInSfx = "",
     end = ".ogg",
@@ -157,7 +166,7 @@ function PlayRandomSoundFromArray({
     range = 10,
     origin = new Vector2(),
 }) {
-    const soundPath = array[RandomRange(0, array.length)];
+    const soundPath = array[randomRange(0, array.length)];
     const fullPath = `${pathInSfx}${soundPath}${end}`;
 
     if (!positional) {
@@ -204,7 +213,6 @@ function removeAudio(audio) {
     audio.onended = null;
     audio.onerror = null;
 }
-
 
 // Play a non-positional sound with error handling
 function playSound(sound, volume = 1, pitch = 1, loop = false) {
@@ -260,7 +268,7 @@ function playPositionalSound(
     range = 10,
     maxVolume = 1,
     pitch = 1,
-    loop = false
+    loop = false,
 ) {
     const sfxMultiplier = (settings.sfxVolume ?? 100) / 100;
     maxVolume = maxVolume * sfxMultiplier;
@@ -317,7 +325,6 @@ function playPositionalSound(
     audioElem.play().catch((err) => {
         // console.error(`Error playing positional sound ${url}: ${err}`);
     });
-
     return audioElem;
 }
 
@@ -326,7 +333,7 @@ function playMessySound(
     sound,
     range = 10,
     maxVolume = 1,
-    messyRange = new Vector2(1, 4)
+    messyRange = new Vector2(1, 4),
 ) {
     const sfxMultiplier = (settings.sfxVolume ?? 100) / 100;
     maxVolume = maxVolume * sfxMultiplier;
@@ -349,12 +356,12 @@ function playMessySound(
             player &&
             Vector2.Distance(player.position, origin) <= range * BLOCK_SIZE
         ) {
-            const pitch = RandomRange(0.5, 1.5); // Randomize pitch for each play
+            const pitch = randomRange(0.5, 1.5); // Randomize pitch for each play
             playPositionalSound(origin, sound, range, maxVolume, pitch, false);
         }
 
         // Schedule the next play with a new random interval
-        const interval = RandomRange(messyRange.x, messyRange.y) * 1000;
+        const interval = randomRange(messyRange.x, messyRange.y) * 1000;
         const timeoutId = setTimeout(playAndSchedule, interval);
 
         // Update the timeout ID in the messySounds array

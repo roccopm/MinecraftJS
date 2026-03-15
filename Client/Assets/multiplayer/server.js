@@ -35,7 +35,6 @@ class Server {
             // console.log("WebSocket connection is not open");
         }
     }
-
     async get({ type, message, sender }) {
         if (!this.ws.readyState === WebSocket.OPEN) return null;
         return new Promise((resolve, reject) => {

@@ -284,6 +284,7 @@ function loadBindings(inputType) {
     try {
         const raw = localStorage.getItem(config.storageKey);
         if (!raw) return { ...config.defaults };
+
         const parsed = JSON.parse(raw);
         const out = { ...config.defaults };
         for (const action of Object.keys(config.defaults)) {

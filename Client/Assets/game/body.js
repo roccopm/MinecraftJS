@@ -27,7 +27,7 @@ class Body {
 
         this.image.src = getSpriteUrl(
             "entity/" + sprite,
-            isEqualToOriginal("entity/" + sprite)
+            isEqualToOriginal("entity/" + sprite),
         );
     }
 
@@ -85,7 +85,7 @@ class Body {
                 // Clamp the adjustedLookDirection to be between -90 and 90 degrees
                 let targetRotation = Math.max(
                     -90,
-                    Math.min(90, adjustedLookDirection)
+                    Math.min(90, adjustedLookDirection),
                 );
 
                 // Smoothly interpolate between current rotation and the adjusted look direction
@@ -112,7 +112,7 @@ class Body {
 
     draw(ctx, direction, lookDirection, holdItem) {
         const sortedParts = Object.values(this.parts).sort(
-            (a, b) => a.zIndex - b.zIndex
+            (a, b) => a.zIndex - b.zIndex,
         );
 
         ctx.globalAlpha = this.opacity;
@@ -125,8 +125,7 @@ class Body {
                         ? this.flipCorrection * (BLOCK_SIZE / 64)
                         : 0) +
                     BLOCK_SIZE * (part.offset.x / 64),
-                y:
-                    this.position.y + BLOCK_SIZE * (part.offset.y / 64),
+                y: this.position.y + BLOCK_SIZE * (part.offset.y / 64),
             };
             part.draw(
                 ctx,
@@ -135,7 +134,7 @@ class Body {
                 this.flashingColor,
                 this.brightness,
                 this.image,
-                direction
+                direction,
             );
         }
 
@@ -220,7 +219,7 @@ class BodyPart {
     getSwayRotation(speed, grounded) {
         const oscillation = Math.sin(
             Date.now() / (grounded ? this.swaySpeed : this.swaySpeed * 5) +
-                this.swayPhase
+                this.swayPhase,
         );
         const effectiveSwayAngle = Math.abs(speed / 1000) * this.maxSwayAngle;
         const output =
@@ -237,7 +236,7 @@ class BodyPart {
         flashingColor,
         brightness = 1,
         image,
-        direction
+        direction,
     ) {
         const img = this.loadSprite(image);
 
@@ -284,7 +283,7 @@ class BodyPart {
             -destWidth / (scaleFactor * 2),
             -destHeight / (scaleFactor * 2),
             destWidth,
-            destHeight
+            destHeight,
         );
 
         if (this.zIndex < 0) {
@@ -294,7 +293,7 @@ class BodyPart {
                 -destWidth / (scaleFactor * 2),
                 -destHeight / (scaleFactor * 2),
                 destWidth,
-                destHeight
+                destHeight,
             );
         }
 
@@ -305,7 +304,7 @@ class BodyPart {
                 -destWidth / (scaleFactor * 2),
                 -destHeight / (scaleFactor * 2),
                 destWidth,
-                destHeight
+                destHeight,
             );
             ctx.globalAlpha = 1;
         }
@@ -371,7 +370,7 @@ class BodyPart {
             img = new Image();
             img.src = getSpriteUrl(
                 "entity/" + this.ownSpriteMap,
-                isEqualToOriginal("entity/" + this.ownSpriteMap)
+                isEqualToOriginal("entity/" + this.ownSpriteMap),
             );
         }
 
@@ -414,7 +413,7 @@ class BodyPart {
         let cutoff = 0;
         // If it is a block, get the default draw cutoff
         if (holdItem.blockId) {
-            cutoff = GetBlock(holdItem.blockId).defaultCutoff;
+            cutoff = getBlock(holdItem.blockId).defaultCutoff;
         }
 
         drawImage({
@@ -437,17 +436,17 @@ class BodyPart {
 
     isTool(item) {
         if (item.itemId) {
-            if (GetItem(item.itemId).toolType != ToolType.Nothing) return true;
+            if (getItem(item.itemId).toolType != ToolType.Nothing) return true;
         }
         return false;
     }
 
     getHeldItemSpritePath(holdItem) {
         if (holdItem.blockId) {
-            return "blocks/" + GetBlock(holdItem.blockId).iconSprite;
+            return "blocks/" + getBlock(holdItem.blockId).iconSprite;
         }
         if (holdItem.itemId != null) {
-            return "items/" + GetItem(holdItem.itemId).sprite;
+            return "items/" + getItem(holdItem.itemId).sprite;
         }
         return null;
     }

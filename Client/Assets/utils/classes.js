@@ -41,7 +41,7 @@ class Vector2 {
 function calculateDirection(positionA, positionB) {
     const direction = new Vector2(
         positionB.x - positionA.x,
-        positionB.y - positionA.y
+        positionB.y - positionA.y,
     ).normalize();
 
     return direction;
@@ -61,7 +61,7 @@ class Square {
         alpha = 1,
         sprite = "",
         spriteScale = 1,
-        dark = false
+        dark = false,
     ) {
         this.transform = transform;
         this.alpha = alpha;
@@ -116,7 +116,7 @@ class Square {
             Math.round(-this.transform.size.x / 2 - camera.x),
             Math.round(-this.transform.size.y / 2 - camera.y),
             Math.round(this.transform.size.x),
-            Math.round(this.transform.size.y)
+            Math.round(this.transform.size.y),
         );
         ctx.globalAlpha = this.alpha;
     }
@@ -158,7 +158,7 @@ class Square {
                     camera.x,
                 -this.transform.size.y / 2 - this.outline - camera.y,
                 this.transform.size.x + this.outline * 2,
-                this.transform.size.y + this.outline * 2
+                this.transform.size.y + this.outline * 2,
             );
             ctx.fillStyle = this.color;
         }
@@ -169,7 +169,7 @@ class Square {
         }
 
         const offset = this.blockType
-            ? GetBlock(this.blockType).blockOffset
+            ? getBlock(this.blockType).blockOffset
             : { x: 0, y: 0 };
 
         // Determine drawing values (common for animated and non-animated)
@@ -177,10 +177,10 @@ class Square {
             -this.transform.size.x / 2 +
                 this.drawOffset -
                 camera.x +
-                offset.x * BLOCK_SIZE
+                offset.x * BLOCK_SIZE,
         );
         const drawY = Math.round(
-            -this.transform.size.y / 2 - camera.y + offset.y * BLOCK_SIZE
+            -this.transform.size.y / 2 - camera.y + offset.y * BLOCK_SIZE,
         );
         const drawWidth = this.spriteSize * this.spriteScale;
         const drawHeight = this.spriteSize * this.spriteScale;
@@ -201,7 +201,7 @@ class Square {
                     drawX,
                     drawY + (drawHeight - visibleHeight),
                     drawWidth,
-                    visibleHeight
+                    visibleHeight,
                 );
                 ctx.clip();
 
@@ -238,7 +238,7 @@ class Square {
         const frameY = effectiveFrame * frameHeight;
 
         const drawX = Math.round(
-            -this.transform.size.x / 2 + this.drawOffset - camera.x
+            -this.transform.size.x / 2 + this.drawOffset - camera.x,
         );
         const drawY = Math.round(-this.transform.size.y / 2 - camera.y);
         const drawWidth = this.spriteSize * this.spriteScale;
@@ -259,7 +259,7 @@ class Square {
             drawX,
             drawY + (drawHeight - visibleHeight),
             drawWidth,
-            visibleHeight
+            visibleHeight,
         );
         ctx.clip();
 
@@ -273,7 +273,7 @@ class Square {
             drawX, // destination x
             drawY, // destination y
             drawWidth, // destination width
-            drawHeight // destination height
+            drawHeight, // destination height
         );
 
         // Optionally apply a dark overlay (only over the visible portion).
@@ -284,7 +284,7 @@ class Square {
                 drawX,
                 drawY + (drawHeight - visibleHeight),
                 drawWidth,
-                visibleHeight
+                visibleHeight,
             );
             ctx.globalAlpha = this.alpha;
         }
@@ -335,7 +335,7 @@ class SimpleSprite {
                 this.transform.position.x - camera.x,
                 this.transform.position.y - camera.y,
                 this.transform.size.x * this.scale,
-                this.transform.size.y * this.scale
+                this.transform.size.y * this.scale,
             );
 
             ctx.globalAlpha = 1;
@@ -426,11 +426,11 @@ function rgbToHex(r, g, b) {
         .padStart(2, "0")}`.toUpperCase();
 }
 
-function RandomRange(min, max) {
+function randomRange(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function AngleToVector(angle) {
+function angleToVector(angle) {
     return new Vector2(Math.cos(angle), Math.sin(angle));
 }
 
@@ -487,6 +487,6 @@ function uuidv4() {
         (
             c ^
             (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
-        ).toString(this.spriteSize)
+        ).toString(this.spriteSize),
     );
 }

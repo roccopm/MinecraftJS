@@ -19,11 +19,11 @@
     var n,
         o = { k: "", v: "" },
         r = t.open("d2", 1);
-    (r.onsuccess = function (e) {
+    ((r.onsuccess = function (e) {
         n = this.result;
     }),
         (r.onerror = function (e) {
-            console.error("indexedDB request error"), console.log(e);
+            (console.error("indexedDB request error"), console.log(e));
         }),
         (r.onupgradeneeded = function (e) {
             n = null;
@@ -35,9 +35,9 @@
         (window.ldb = {
             get: e,
             set: function (e, t) {
-                (o.k = e),
+                ((o.k = e),
                     (o.v = t),
-                    n.transaction("s", "readwrite").objectStore("s").put(o);
+                    n.transaction("s", "readwrite").objectStore("s").put(o));
             },
             remove: function (key, callback) {
                 // Use a transaction to delete the key and provide a callback for completion
@@ -52,7 +52,7 @@
                     if (callback) callback(e.target.error); // Pass error to callback
                 };
             },
-        });
+        }));
 })();
 
 function getFromLdb(key) {
@@ -72,7 +72,7 @@ function deleteFromLdb(key) {
         ldb.remove(key, (err) => {
             if (err) {
                 reject(
-                    new Error(`Failed to delete key ${key}: ${err.message}`)
+                    new Error(`Failed to delete key ${key}: ${err.message}`),
                 );
             } else {
                 resolve(); // Successfully deleted

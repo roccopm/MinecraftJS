@@ -962,7 +962,7 @@ const Structures = Object.freeze({
     // }),
     DesertTemple: new Structure({
         biome: OverworldBiomes.Desert,
-        shift: { x: 0, y: 14 },
+        shift: { x: 0, y: -12 },
         blocks: [
             [
                 Blocks.Air,

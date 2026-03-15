@@ -10,13 +10,13 @@ ctx.webkitImageSmoothingEnabled = false;
 ctx.mozImageSmoothingEnabled = false;
 
 let drawingChunkBorders = false;
-let drawCamera = false;
-let drawHeight = false;
-let drawDebugMouseBlock = false;
-let drawFileSize = false;
-let drawFps = true;
+let drawCameraOverlay = false;
+let drawHeightOverlay = false;
+let drawDebugMouseBlockOverlay = false;
+let drawFileSizeOverlay = false;
+let drawFpsOverlay = true;
 let drawHitbox = false;
-let drawCoordinates = true;
+let drawCoordinatesOverlay = true;
 
 let cursorInRange = false;
 
@@ -28,7 +28,7 @@ const camera = new Camera(0, CHUNK_HEIGHT * 2);
 
 r.style.setProperty("--drawMouse", "none");
 
-function DrawBackground() {
+function drawBackground() {
     // Calculate the color stops based on time
     const dayColor = getDimension(activeDimension).backgroundGradient.dayColor;
     const nightColor =
@@ -41,12 +41,12 @@ function DrawBackground() {
     const topColor = interpolateColor(
         nightColor,
         dayColor,
-        Math.sin(time) * 0.5 + 0.5
+        Math.sin(time) * 0.5 + 0.5,
     );
     const bottomColor = interpolateColor(
         midnightColor,
         sunsetColor,
-        Math.sin(time) * 0.5 + 0.5
+        Math.sin(time) * 0.5 + 0.5,
     );
 
     const gradient = ctx.createLinearGradient(0, CANVAS.height, 0, 0);
@@ -103,32 +103,32 @@ function isColliding(pos1, size1, pos2, size2) {
     );
 }
 
-function DrawParticleEmitters() {
+function drawParticleEmitters() {
     for (const particleEmitter of particleEmitters) {
         particleEmitter.draw(camera);
     }
 }
 
-function Draw(chunks, frames) {
+function draw(chunks, frames) {
     fps = frames;
 
-    DrawBackground();
-    DrawChunks(chunks);
+    drawBackground();
+    drawChunks(chunks);
     if (player && !pauseMenu?.getActive()) {
-        DrawBreakAndPlaceCursor(cursorInRange);
-        DrawDestroyStage();
+        drawBreakAndPlaceCursor(cursorInRange);
+        drawDestroyStage();
     }
 
-    DrawParticleEmitters();
+    drawParticleEmitters();
 
-    DrawEntities();
+    drawEntities();
 
-    AfterDraw();
+    afterDraw();
 
-    DrawLoadScreen();
+    drawLoadScreen();
 }
 
-function DrawLoadScreen() {
+function drawLoadScreen() {
     if (!isTexturePackLoaded || loadingWorld) {
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, CANVAS.width, CANVAS.height);
@@ -141,26 +141,26 @@ function DrawLoadScreen() {
             ctx.fillText(
                 "Loading texture pack...",
                 CANVAS.width / 2,
-                CANVAS.height / 2
+                CANVAS.height / 2,
             );
         else if (loadingWorld)
             ctx.fillText(
                 "Loading world...",
                 CANVAS.width / 2,
-                CANVAS.height / 2
+                CANVAS.height / 2,
             );
     }
 }
 
-function DrawEntities() {
+function drawEntities() {
     entities.forEach((entity) => {
         if (entity.dimension !== activeDimension) return;
         if (
             Math.abs(
                 Vector2.XDistance(
                     new Vector2(camera.getWorldX(camera.x), 0),
-                    entity.position
-                )
+                    entity.position,
+                ),
             ) <=
             RENDER_DISTANCE * 2 * BLOCK_SIZE * CHUNK_WIDTH
         ) {
@@ -168,7 +168,7 @@ function DrawEntities() {
         } else {
             if (entity.despawn) {
                 const chunk = getDimensionChunks(activeDimension).get(
-                    entity.myChunkX
+                    entity.myChunkX,
                 );
                 if (chunk) chunk.removeEntityFromChunk(entity);
 
@@ -180,7 +180,7 @@ function DrawEntities() {
     if (drawHitbox) drawHitboxes();
 }
 
-function DrawBreakAndPlaceCursor(inRange = false) {
+function drawBreakAndPlaceCursor(inRange = false) {
     const mouseX = input.getMousePositionOnBlockGrid().x;
     const mouseY = input.getMousePositionOnBlockGrid().y;
 
@@ -209,11 +209,11 @@ function DrawBreakAndPlaceCursor(inRange = false) {
         mouseX - Math.floor(camera.x),
         mouseY - Math.floor(camera.y),
         BLOCK_SIZE,
-        BLOCK_SIZE
+        BLOCK_SIZE,
     );
 }
 
-function DrawChunks(chunksMap) {
+function drawChunks(chunksMap) {
     const currentChunkX = camera.getCurrentChunkIndex(); // Get the x position of the current chunk
 
     chunks_in_render_distance.clear();
@@ -228,18 +228,17 @@ function DrawChunks(chunksMap) {
             const chunk = chunksMap.get(chunkX);
 
             chunk.draw(ctx, camera);
-            DrawLate(chunk);
+            drawLate(chunk);
         }
     }
 }
 
-function DrawCoordinates() {
+function drawCoordinates() {
     if (!player) return;
+    const blockPos = worldToBlocks(player.position);
     drawText({
-        text: `x: ${
-            Math.round((player.position.x / BLOCK_SIZE) * 100) / 100
-        } y: ${
-            Math.round(ReverseY(player.position.y / BLOCK_SIZE) * 100) / 100
+        text: `x: ${Math.round(blockPos.x * 100) / 100} y: ${
+            Math.round(blockPos.y * 100) / 100
         }`,
         x: 5,
         y: 20,
@@ -250,43 +249,43 @@ function DrawCoordinates() {
     });
 }
 
-function DrawCamera() {
+function drawCamera() {
     ctx.fillStyle = "white";
     ctx.fillRect(CANVAS.width / 2 - 2, CANVAS.height / 2 - 2, 14, 14);
     ctx.fillStyle = "black";
     ctx.fillRect(CANVAS.width / 2, CANVAS.height / 2, 10, 10);
 }
 
-function DrawLate(chunk) {
-    if (drawingChunkBorders) DrawChunkLine(chunk);
-    if (drawHeight) DrawHeight();
+function drawLate(chunk) {
+    if (drawingChunkBorders) drawChunkLine(chunk);
+    if (drawHeightOverlay) drawHeight();
 }
 
-function AfterDraw() {
+function afterDraw() {
     if (player) {
-        DrawUI();
-        if (!window.pauseMenu?.getActive()) DrawCursor();
-        if (drawCoordinates) DrawCoordinates();
+        drawUI();
+        if (!window.pauseMenu?.getActive()) drawCursor();
+        if (drawCoordinatesOverlay) drawCoordinates();
     }
-    if (drawCamera) DrawCamera();
-    if (drawDebugMouseBlock) DrawDebugMouseBlock();
-    if (drawFileSize) DrawExpectedFileSize();
-    if (drawFps) DrawFps();
+    if (drawCameraOverlay) drawCamera();
+    if (drawDebugMouseBlockOverlay) drawDebugMouseBlock();
+    if (drawFileSizeOverlay) drawExpectedFileSize();
+    if (drawFpsOverlay) drawFps();
 }
 
-function DrawUI() {
-    DrawHotbar();
-    DrawInventory();
+function drawUI() {
+    drawHotbar();
+    drawInventory();
     chat.draw(ctx);
 }
 
-function DrawInventory() {
+function drawInventory() {
     if (!player.windowOpen) return;
 
     player.inventory.draw(ctx);
 }
 
-function DrawDestroyStage() {
+function drawDestroyStage() {
     if (!player) return;
     if (player.breakingStage == 0 || player.breakingStage > 10) return;
 
@@ -294,7 +293,7 @@ function DrawDestroyStage() {
     const mouseY = input.getMousePositionOnBlockGrid().y;
 
     const spriteSize = getSpriteSize(
-        "blocks/destroy_stage_" + (player.breakingStage - 1)
+        "blocks/destroy_stage_" + (player.breakingStage - 1),
     ).width;
 
     drawImage({
@@ -306,7 +305,7 @@ function DrawDestroyStage() {
     });
 }
 
-function DrawChunkLine(chunk) {
+function drawChunkLine(chunk) {
     const chunkX = chunk.x;
     ctx.strokeStyle = "red";
     ctx.beginPath();
@@ -319,10 +318,10 @@ function DrawChunkLine(chunk) {
 
     ctx.stroke();
 
-    DrawChunkStats(chunk, chunkX);
+    drawChunkStats(chunk, chunkX);
 }
 
-function DrawCursor() {
+function drawCursor() {
     if (!player) return;
 
     if (player.windowOpen) {
@@ -345,7 +344,7 @@ function DrawCursor() {
     });
 }
 
-function DrawFps() {
+function drawFps() {
     ctx.fillStyle = "black";
     ctx.font = "20px Pixel";
     ctx.textAlign = "right";
@@ -353,7 +352,7 @@ function DrawFps() {
     ctx.fillText(fps, CANVAS.width - 10, CANVAS.height - 10);
 }
 
-function DrawChunkStats(chunk, chunkX) {
+function drawChunkStats(chunk, chunkX) {
     ctx.textAlign = "left";
     const index = chunk.x / CHUNK_WIDTH / BLOCK_SIZE;
 
@@ -364,12 +363,15 @@ function DrawChunkStats(chunk, chunkX) {
     let txt = `${index} - ${chunk.biome.name}\nTemp: ${Math.floor(
         getDimension(activeDimension).noiseMaps.temperature.getNoise(
             index,
-            20000
-        )
+            20000,
+        ),
     )}\nWetness: ${Math.floor(
-        getDimension(activeDimension).noiseMaps.wetness.getNoise(index, 10000)
+        getDimension(activeDimension).noiseMaps.wetness.getNoise(index, 10000),
     )}\nMountains: ${Math.floor(
-        getDimension(activeDimension).noiseMaps.mountains.getNoise(index, 30000)
+        getDimension(activeDimension).noiseMaps.mountains.getNoise(
+            index,
+            30000,
+        ),
     )}\nHeight: ${chunk.biome.heightNoise.scale * 1000} - ${
         chunk.biome.heightNoise.intensity
     }`;
@@ -395,7 +397,7 @@ function DrawChunkStats(chunk, chunkX) {
     }
 }
 
-function DrawExpectedFileSize() {
+function drawExpectedFileSize() {
     ctx.fillStyle = "black";
     ctx.font = "15px Pixel";
     ctx.textAlign = "left";
@@ -405,11 +407,11 @@ function DrawExpectedFileSize() {
             (getDimensionChunks(activeDimension).size * CHUNK_FILE_SIZE + 5) +
             "kB",
         10,
-        CANVAS.height - 10
+        CANVAS.height - 10,
     );
 }
 
-function DrawHeight() {
+function drawHeight() {
     ctx.beginPath();
 
     // Get the world position at the leftmost visible edge of the screen
@@ -428,14 +430,14 @@ function DrawHeight() {
         const chunk = getDimensionChunks(activeDimension).get(
             Math.floor(worldX / (CHUNK_WIDTH * BLOCK_SIZE)) *
                 CHUNK_WIDTH *
-                BLOCK_SIZE
+                BLOCK_SIZE,
         );
 
         if (!chunk) continue; // Skip if no chunk exists at this position
 
         // Get the noise height for this block's position
         const noiseHeight = chunk.getHeight(
-            (worldX % (CHUNK_WIDTH * BLOCK_SIZE)) / BLOCK_SIZE
+            (worldX % (CHUNK_WIDTH * BLOCK_SIZE)) / BLOCK_SIZE,
         );
 
         // Calculate the screen Y position based on noise height
@@ -458,7 +460,7 @@ function DrawHeight() {
     ctx.stroke();
 }
 
-function DrawDebugMouseBlock() {
+function drawDebugMouseBlock() {
     r.style.setProperty("--drawMouse", "none");
 
     const mouseX = input.getMousePositionOnBlockGrid().x;
@@ -475,13 +477,13 @@ function DrawDebugMouseBlock() {
         topLeftX - Math.floor(camera.x),
         topLeftY - Math.floor(camera.y),
         BLOCK_SIZE,
-        BLOCK_SIZE
+        BLOCK_SIZE,
     );
 
     ctx.lineWidth = 1;
 }
 
-function DrawHotbar() {
+function drawHotbar() {
     if (!hotbar) return;
 
     hotbar.draw(ctx);
@@ -579,7 +581,7 @@ function drawSimpleImage({
         drawX, // Canvas x
         drawY, // Canvas y
         drawWidth, // Scaled width
-        drawHeight // Scaled height
+        drawHeight, // Scaled height
     );
 }
 
@@ -666,7 +668,7 @@ function drawImage({
             drawX, // Canvas x
             drawY, // Canvas y
             drawWidth, // Scaled width
-            drawHeight // Scaled height
+            drawHeight, // Scaled height
         );
 
         // Apply dark overlay if specified
@@ -695,8 +697,8 @@ function drawImage({
         (sizeY !== null
             ? Math.min(sizeY, fullHeight)
             : shouldCrop
-            ? crop.height
-            : img.height) * scale;
+              ? crop.height
+              : img.height) * scale;
     return {
         x: centerX ? x - drawWidthFinal / 2 : x,
         y: centerY ? y - drawHeightFinal / 2 : y,

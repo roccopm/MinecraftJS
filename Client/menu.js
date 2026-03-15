@@ -127,8 +127,8 @@ function multiplayerButton() {
 
 function downloadServer() {
     const link = document.createElement("a");
-    link.href = "Server.zip";
-    link.download = "Server.zip";
+    link.href = "server.zip";
+    link.download = "server.zip";
     document.body.appendChild(link);
 
     link.click();
@@ -192,8 +192,7 @@ function loadSettings() {
     }
     if (sfxVolumeSlider) {
         sfxVolumeSlider.value = currentSettings.sfxVolume;
-        sfxVolumeLabel.textContent =
-            "SFX - " + currentSettings.sfxVolume + "%";
+        sfxVolumeLabel.textContent = "SFX - " + currentSettings.sfxVolume + "%";
     }
     lightingToggleButton.textContent =
         "Lighting - " + (currentSettings.lighting ? "On" : "Off");
@@ -300,7 +299,8 @@ function populateWorlds() {
             const lastPlayedDisplay = isNaN(lastPlayedDate.getTime())
                 ? world.lastPlayed
                 : lastPlayedDate.toLocaleString();
-            worldDateElement.textContent = lastPlayedDisplay + ` - ${worldSize}KB`;
+            worldDateElement.textContent =
+                lastPlayedDisplay + ` - ${worldSize}KB`;
             worldElement.style.display = "flex";
 
             worldElement.addEventListener("click", () => {
@@ -615,7 +615,8 @@ function uploadWorld() {
                 return;
             }
             const id = Date.now();
-            const baseName = file.name.replace(/\.save$/i, "") || "Uploaded World";
+            const baseName =
+                file.name.replace(/\.save$/i, "") || "Uploaded World";
             const name = prompt("World name:", baseName);
             if (name === null) return;
             const worldName = name.trim() || "Uploaded World";
@@ -780,7 +781,6 @@ async function pingServer(server) {
                 // Silently handle parsing errors
             }
         };
-
         ws.onerror = () => {
             clearTimeout(timeoutId);
             ws.close();
@@ -1203,19 +1203,43 @@ function updateQuickConnectIP(value) {
 }
 
 function connectToServer() {
-    if (!selectedServerId) {
-        alert("Please select a server to connect to.");
-        return;
+    let serverAddress = "";
+
+    if (quickConnectContainer.style.display === "flex") {
+        serverAddress = (
+            quickConnectIPInput.value ||
+            tempQuickConnectIP ||
+            ""
+        ).trim();
+
+        if (!serverAddress) {
+            alert("Please enter a server IP.");
+            return;
+        }
+
+        if (!isValidServerIp(serverAddress)) {
+            alert(
+                "Invalid server IP. Use a valid IPv4 address, domain, or localhost with optional port."
+            );
+            return;
+        }
+    } else {
+        if (!selectedServerId) {
+            alert("Please select a server to connect to.");
+            return;
+        }
+
+        const servers = JSON.parse(localStorage.getItem("servers") || "[]");
+        const selectedServer = servers.find((s) => s.id === selectedServerId);
+        if (!selectedServer) {
+            alert("Selected server not found.");
+            return;
+        }
+
+        serverAddress = selectedServer.ip;
     }
 
-    const servers = JSON.parse(localStorage.getItem("servers") || "[]");
-    const selectedServer = servers.find((s) => s.id === selectedServerId);
-    if (!selectedServer) {
-        alert("Selected server not found.");
-        return;
-    }
-
-    const [ip, port = "25565"] = selectedServer.ip.split(":");
+    const [ip, port = "25565"] = serverAddress.split(":");
     localStorage.setItem("multiplayerIP", ip);
     localStorage.setItem("multiplayerPort", port);
 
@@ -1249,14 +1273,26 @@ function gotoOptions() {
     if (controlsPanel) controlsPanel.style.display = "none";
     if (optionsPanelTitle) optionsPanelTitle.textContent = "Options";
     if (rebindDocumentContextmenuHandler) {
-        document.removeEventListener("contextmenu", rebindDocumentContextmenuHandler, true);
+        document.removeEventListener(
+            "contextmenu",
+            rebindDocumentContextmenuHandler,
+            true
+        );
         rebindDocumentContextmenuHandler = null;
     }
     rebindSuppressContextMenuUntil = 0;
-    if (rebindKeydownHandler) document.removeEventListener("keydown", rebindKeydownHandler, true);
-    if (rebindMousedownHandler) document.removeEventListener("mousedown", rebindMousedownHandler, true);
-    if (rebindWheelHandler) document.removeEventListener("wheel", rebindWheelHandler, true);
-    if (rebindContextmenuHandler) document.removeEventListener("contextmenu", rebindContextmenuHandler, true);
+    if (rebindKeydownHandler)
+        document.removeEventListener("keydown", rebindKeydownHandler, true);
+    if (rebindMousedownHandler)
+        document.removeEventListener("mousedown", rebindMousedownHandler, true);
+    if (rebindWheelHandler)
+        document.removeEventListener("wheel", rebindWheelHandler, true);
+    if (rebindContextmenuHandler)
+        document.removeEventListener(
+            "contextmenu",
+            rebindContextmenuHandler,
+            true
+        );
     if (controlsPanel) controlsPanel.style.pointerEvents = "";
     rebindKeydownHandler = null;
     rebindMousedownHandler = null;
@@ -1412,7 +1448,11 @@ function renderControlsList() {
 function startRebind(action) {
     if (waitingForRebindAction) return;
     if (rebindDocumentContextmenuHandler) {
-        document.removeEventListener("contextmenu", rebindDocumentContextmenuHandler, true);
+        document.removeEventListener(
+            "contextmenu",
+            rebindDocumentContextmenuHandler,
+            true
+        );
         rebindDocumentContextmenuHandler = null;
     }
     waitingForRebindAction = action;
@@ -1420,7 +1460,10 @@ function startRebind(action) {
     if (controlsPanel) controlsPanel.style.pointerEvents = "none";
 
     const documentContextmenuHandler = (e) => {
-        if (waitingForRebindAction || Date.now() < rebindSuppressContextMenuUntil) {
+        if (
+            waitingForRebindAction ||
+            Date.now() < rebindSuppressContextMenuUntil
+        ) {
             e.preventDefault();
             e.stopPropagation();
         }
@@ -1442,7 +1485,11 @@ function startRebind(action) {
             if (existingAction) {
                 if (
                     !confirm(
-                        `"${getDisplayName(key)}" is already bound to "${getActionLabel(existingAction)}". Override and unbind it from that action?`
+                        `"${getDisplayName(
+                            key
+                        )}" is already bound to "${getActionLabel(
+                            existingAction
+                        )}". Override and unbind it from that action?`
                     )
                 ) {
                     renderControlsList();
@@ -1462,7 +1509,12 @@ function startRebind(action) {
         e.stopPropagation();
         if (e.code === "Escape") return finishRebind([]);
         if (!e.code) return;
-        if (["ControlLeft", "ControlRight"].includes(e.code) && !confirm("Ctrl is not recommended as a binding because we can't prevent browser shortcuts (such as Ctrl+W to close the tab) from taking place.\n\nDo you want to use Ctrl anyway?")) {
+        if (
+            ["ControlLeft", "ControlRight"].includes(e.code) &&
+            !confirm(
+                "Ctrl is not recommended as a binding because we can't prevent browser shortcuts (such as Ctrl+W to close the tab) from taking place.\n\nDo you want to use Ctrl anyway?"
+            )
+        ) {
             finishRebind();
             return;
         }
@@ -1488,9 +1540,15 @@ function startRebind(action) {
     rebindWheelHandler = wheelHandler;
     rebindContextmenuHandler = documentContextmenuHandler;
     rebindDocumentContextmenuHandler = documentContextmenuHandler;
-    document.addEventListener("keydown", keyHandler, { once: true, capture: true });
+    document.addEventListener("keydown", keyHandler, {
+        once: true,
+        capture: true,
+    });
     document.addEventListener("mousedown", mouseHandler, true);
-    document.addEventListener("wheel", wheelHandler, { passive: false, capture: true });
+    document.addEventListener("wheel", wheelHandler, {
+        passive: false,
+        capture: true,
+    });
     document.addEventListener("contextmenu", documentContextmenuHandler, true);
 
     function pollGamepadForRebind() {
@@ -1514,7 +1572,8 @@ function startRebind(action) {
 
 function cancelRebind(keyHandler, mouseHandler, wheelHandler) {
     if (keyHandler) document.removeEventListener("keydown", keyHandler, true);
-    if (mouseHandler) document.removeEventListener("mousedown", mouseHandler, true);
+    if (mouseHandler)
+        document.removeEventListener("mousedown", mouseHandler, true);
     if (wheelHandler) document.removeEventListener("wheel", wheelHandler, true);
     if (controlsPanel) controlsPanel.style.pointerEvents = "";
     if (rebindGamepadRAFId != null) cancelAnimationFrame(rebindGamepadRAFId);

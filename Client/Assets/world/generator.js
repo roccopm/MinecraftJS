@@ -14,7 +14,7 @@ function setSeed(newSeed) {
 
 let loadingWorld = true;
 
-function PrintNoiseOutput(noise, count = 100) {
+function printNoiseOutput(noise, count = 100) {
     // Initialize variables to track min and max
     let minValue = Infinity;
     let maxValue = -Infinity;
@@ -34,7 +34,7 @@ function PrintNoiseOutput(noise, count = 100) {
     console.log("Maximum Noise Value:", maxValue);
 }
 
-function LocateBiome(biome) {
+function locateBiome(biome) {
     for (let i = 0; i < 10000; i++) {
         let currentBiome = calculateChunkBiome(i);
 
@@ -48,7 +48,7 @@ function LocateBiome(biome) {
     return false;
 }
 
-function LoadCustomSeed(seed) {
+function loadCustomSeed(seed) {
     // Set seed to lowercase
     seed = seed.toString().toLowerCase();
 
@@ -110,7 +110,7 @@ function LoadCustomSeed(seed) {
     }
 }
 
-function BiomesInChunkCount(count) {
+function biomesInChunkCount(count) {
     // store all biomes and print their count
     let biomeCount = {};
     for (let i = 0; i < count; i++) {
@@ -123,12 +123,12 @@ function BiomesInChunkCount(count) {
     // then print in percentage the distribution of biomes
     for (const biome in biomeCount) {
         console.log(
-            `${biome}: ${((biomeCount[biome] / count) * 100).toFixed(2)}%`,
+            `${biome}: ${((biomeCount[biome] / count) * 100).toFixed(2)}%`
         );
     }
 }
 
-function RegenerateWorld() {
+function regenerateWorld() {
     let seed = Math.floor(Math.random() * 10000);
     tooloud.Perlin.setSeed(seed);
 
@@ -141,7 +141,7 @@ function RegenerateWorld() {
     }, 1);
 }
 
-async function GetChunkFromServer(x, dimensionIndex = activeDimension) {
+async function getChunkFromServer(x, dimensionIndex = activeDimension) {
     try {
         const chunkData = await server.get({
             type: "getChunk",
@@ -173,29 +173,29 @@ async function generateWorld(dimensionIndex = activeDimension) {
         if (multiplayer) {
             if (!dimension.chunks.has(chunkX)) {
                 console.log("Chunk not loaded", chunkX, dimensionIndex);
-                const chunkFromServer = await GetChunkFromServer(
+                const chunkFromServer = await getChunkFromServer(
                     chunkX,
-                    dimensionIndex,
+                    dimensionIndex
                 ); // Ensure async handling
                 console.log(
                     "Chunk from server",
                     chunkX,
                     chunkFromServer,
-                    dimensionIndex,
+                    dimensionIndex
                 );
                 if (chunkFromServer) {
                     console.log(
                         "Loaded chunk from server",
                         chunkX,
-                        chunkFromServer,
+                        chunkFromServer
                     );
-                    LoadChunk(chunkX, chunkFromServer, dimensionIndex);
+                    loadChunk(chunkX, chunkFromServer, dimensionIndex);
                 } else {
                     willUploadChunk = true;
                     const oldChunkData = getNeighborBiomeData(
                         i,
                         currentChunkIndex,
-                        dimensionIndex,
+                        dimensionIndex
                     );
                     generateChunk(i, chunkX, oldChunkData, dimensionIndex);
                 }
@@ -204,7 +204,7 @@ async function generateWorld(dimensionIndex = activeDimension) {
             const oldChunkData = getNeighborBiomeData(
                 i,
                 currentChunkIndex,
-                dimensionIndex,
+                dimensionIndex
             );
             generateChunk(i, chunkX, oldChunkData, dimensionIndex);
         } else {
@@ -219,21 +219,21 @@ async function generateWorld(dimensionIndex = activeDimension) {
             generateStructures(dimensionIndex);
         }
 
-        postProcessChunk(GetChunkForX(chunkX, dimensionIndex));
+        postProcessChunk(getChunkForX(chunkX, dimensionIndex));
 
         if (willUploadChunk) {
-            UploadChunkToServer(chunkX, dimensionIndex);
+            uploadChunkToServer(chunkX, dimensionIndex);
         }
     }
 }
 
-function ServerPlaceBlock(
+function serverPlaceBlock(
     chunkX,
     x,
     y,
     blockType,
     isWall = false,
-    dimensionIndex = activeDimension,
+    dimensionIndex = activeDimension
 ) {
     if (!multiplayer) return;
     server.send({
@@ -249,17 +249,17 @@ function ServerPlaceBlock(
         },
     });
 
-    UploadChunkToServer(chunkX, dimensionIndex);
+    uploadChunkToServer(chunkX, dimensionIndex);
 }
 
-function ServerBreakBlock(
+function serverBreakBlock(
     chunkX,
     x,
     y,
     blockType,
     isWall = false,
     shouldDrop = false,
-    dimensionIndex = activeDimension,
+    dimensionIndex = activeDimension
 ) {
     if (!multiplayer) return;
     server.send({
@@ -276,18 +276,18 @@ function ServerBreakBlock(
         },
     });
 
-    UploadChunkToServer(chunkX, dimensionIndex);
+    uploadChunkToServer(chunkX, dimensionIndex);
 }
 
-async function UploadChunkToServer(chunkX, dimensionIndex = activeDimension) {
+async function uploadChunkToServer(chunkX, dimensionIndex = activeDimension) {
     if (!player) return;
     if (!multiplayer) return;
-    const chunk = GetChunkForX(chunkX, dimensionIndex);
+    const chunk = getChunkForX(chunkX, dimensionIndex);
     await server.send({
         type: "uploadChunk",
         message: {
             x: chunkX,
-            chunk: SaveChunk(chunk),
+            chunk: saveChunk(chunk),
             dimensionIndex: dimensionIndex,
         },
         sender: player.UUID,
@@ -295,9 +295,12 @@ async function UploadChunkToServer(chunkX, dimensionIndex = activeDimension) {
     console.log(`Uploaded chunk ${chunkX} to server`);
 }
 
-function GenerateStructure(structure, x, y) {
+function generateStructure(structure, x, y) {
     const structureData = Structures[structure];
     if (!structureData) return;
+
+    const originBlockX = Math.floor(x / BLOCK_SIZE) + structureData.shift.x;
+    const originBlockY = Math.floor(y / BLOCK_SIZE) + structureData.shift.y;
 
     let structureWidth = structureData.blocks[0].length;
     let structureHeight = structureData.blocks.length;
@@ -320,24 +323,22 @@ function GenerateStructure(structure, x, y) {
         // If flipped, reverse the column index.
         const colIndex = flip ? structureWidth - 1 - i : i;
         for (let j = 0; j < structureHeight; j++) {
-            const blockType = structureData.blocks[j][colIndex];
-            let wallType = Blocks.Air;
-            if (structureData.walls) {
-                wallType = structureData.walls[j][colIndex];
-            }
+            const rowIndex = structureHeight - 1 - j;
+            const blockRow = structureData.blocks[rowIndex] || [];
+            const wallRow = structureData.walls?.[rowIndex] || [];
 
-            const blockX =
-                Math.floor((x + i * BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
-            let blockY = Math.floor(y + j * BLOCK_SIZE);
+            const blockType = blockRow[colIndex] ?? Blocks.Air;
+            const wallType = wallRow[colIndex] ?? Blocks.Air;
 
-            if (!chunk) chunk = GetChunkForX(blockX);
+            const blockX = (originBlockX + i) * BLOCK_SIZE;
+            const blockUserY = originBlockY + j;
+            const blockY = userBlockYToWorld(blockUserY);
 
-            // Convert to world coordinate (flip vertically if needed)
-            blockY = CHUNK_HEIGHT * BLOCK_SIZE - blockY;
+            if (!chunk) chunk = getChunkForX(blockX);
 
             // Process Blocks:
             if (blockType instanceof LootTable) {
-                GenerateChestWithLoot(blockType, blockX, blockY, chunk);
+                generateChestWithLoot(blockType, blockX, blockY, chunk);
             } else {
                 if (blockType !== Blocks.Air) {
                     chunk.setBlockTypeAtPosition(blockX, blockY, blockType);
@@ -346,7 +347,7 @@ function GenerateStructure(structure, x, y) {
 
             // Process Walls:
             if (wallType instanceof LootTable) {
-                GenerateChestWithLoot(wallType, blockX, blockY, chunk);
+                generateChestWithLoot(wallType, blockX, blockY, chunk);
             } else {
                 if (wallType !== Blocks.Air) {
                     chunk.setBlockTypeAtPosition(
@@ -354,7 +355,7 @@ function GenerateStructure(structure, x, y) {
                         blockY,
                         wallType,
                         null,
-                        true,
+                        true
                     );
                 }
             }
@@ -362,7 +363,7 @@ function GenerateStructure(structure, x, y) {
     }
 }
 
-function GenerateChestWithLoot(lootTable, x, y, chunk) {
+function generateChestWithLoot(lootTable, x, y, chunk) {
     const loot = lootTable.getRandomLoot();
 
     let storage = [[]];
@@ -374,23 +375,23 @@ function GenerateChestWithLoot(lootTable, x, y, chunk) {
         }
     }
 
-    const newStorage = PopulateStorageWithLoot(loot, storage);
+    const newStorage = populateStorageWithLoot(loot, storage);
 
     chunk.setBlockTypeAtPosition(
         x,
         y,
         Blocks.Chest,
-        new Metadata({ props: { storage: newStorage } }),
+        new Metadata({ props: { storage: newStorage } })
     );
 }
 
-function PopulateStorageWithLoot(loot, storage) {
+function populateStorageWithLoot(loot, storage) {
     for (const item of loot) {
         let placed = false;
         let attempts = 10;
         while (!placed && attempts > 0) {
-            const randomSlotX = RandomRange(0, storage[0].length);
-            const randomSlotY = RandomRange(0, storage.length);
+            const randomSlotX = randomRange(0, storage[0].length);
+            const randomSlotY = randomRange(0, storage.length);
             if (storage[randomSlotY][randomSlotX].count === 0) {
                 storage[randomSlotY][randomSlotX] = item;
                 placed = true;
@@ -421,7 +422,7 @@ function calculateChunkBiome(chunkIndex, dimensionIndex = activeDimension) {
     let biome = getBiomeForNoise(temp, wet, mount, dimension.biomeSet);
 
     if (specialWorldProps.flat) biome = dimension.biomeSet.Plains || biome;
-    if (dimension.forceToBiome != null) biome = dimension.forceToBiome;
+    if (forceToBiome != null) biome = forceToBiome;
     if (!biome)
         biome =
             dimension.biomeSet.Plains || Object.values(dimension.biomeSet)[0];
@@ -432,7 +433,7 @@ function calculateChunkBiome(chunkIndex, dimensionIndex = activeDimension) {
 function getNeighborBiomeData(
     currentIndex,
     cameraIndex,
-    dimensionIndex = activeDimension,
+    dimensionIndex = activeDimension
 ) {
     const neighborIndex =
         currentIndex < cameraIndex ? currentIndex + 1 : currentIndex - 1;
@@ -446,7 +447,7 @@ function generateChunk(
     chunkIndex,
     chunkX,
     oldChunkData,
-    dimensionIndex = activeDimension,
+    dimensionIndex = activeDimension
 ) {
     // console.log("Seed:", seed);
 
@@ -460,7 +461,7 @@ function generateChunk(
     dimension.chunks.set(chunkX, newChunk);
 }
 
-function GetChunk(worldX, dimension = activeDimension) {
+function getChunk(worldX, dimension = activeDimension) {
     return getDimensionChunks(dimension).has(worldX)
         ? getDimensionChunks(dimension).get(worldX)
         : null;
@@ -507,15 +508,8 @@ function generateStructures(dimensionIndex = activeDimension) {
         const chunkIndex = chunkX / (CHUNK_WIDTH * BLOCK_SIZE);
         const structureNoiseValue = dimension.noiseMaps.structure.getNoise(
             chunkIndex,
-            0,
+            0
         );
-
-        // console.log(
-        //     "Structure noise value for chunk",
-        //     chunkIndex,
-        //     "is",
-        //     structureNoiseValue
-        // );
 
         if (structureNoiseValue > 10) {
             const allStructureNames = Object.keys(Structures);
@@ -535,44 +529,28 @@ function generateStructures(dimensionIndex = activeDimension) {
                 );
             });
 
-            // console.log(
-            //     "Filtered candidates for chunk",
-            //     chunkIndex,
-            //     "are",
-            //     filteredCandidates
-            // );
-
             if (filteredCandidates.length === 0) return;
 
             const randomName =
-                filteredCandidates[RandomRange(0, filteredCandidates.length)];
+                filteredCandidates[randomRange(0, filteredCandidates.length)];
             const structure = Structures[randomName];
 
             const structureX =
-                chunk.x +
-                RandomRange(0, CHUNK_WIDTH) * BLOCK_SIZE +
-                structure.shift.x * BLOCK_SIZE;
+                chunk.x + randomRange(0, CHUNK_WIDTH) * BLOCK_SIZE;
 
             let structureY;
+            const localX = chunk.getLocalX(structureX);
+            const surfaceAirY = chunk.findGroundLevel(localX, false, true);
+            const surfaceGroundY = surfaceAirY - 1;
+
             if (structure.underground) {
-                const localX = chunk.getLocalX(structureX);
-                const surfaceBlockY = chunk.findGroundLevel(localX, true);
-                // if (surfaceBlockY === 0) return;
-                const surfaceY = surfaceBlockY * BLOCK_SIZE;
-                const undergroundOffset =
-                    RandomRange(8, CHUNK_HEIGHT / 2.5) * BLOCK_SIZE;
-                structureY = surfaceY + undergroundOffset;
+                const undergroundOffset = randomRange(8, CHUNK_HEIGHT / 2.5);
+                structureY = (surfaceGroundY - undergroundOffset) * BLOCK_SIZE;
             } else {
-                const localX = chunk.getLocalX(structureX);
-                const surfaceBlockY = chunk.findGroundLevel(localX, true);
-                const surfaceY = surfaceBlockY * BLOCK_SIZE;
-                structureY =
-                    surfaceY -
-                    structure.blocks.length * BLOCK_SIZE +
-                    structure.shift.y * BLOCK_SIZE;
+                structureY = surfaceAirY * BLOCK_SIZE;
             }
 
-            GenerateStructure(randomName, structureX, structureY);
+            generateStructure(randomName, structureX, structureY);
         }
     });
 }
@@ -583,7 +561,7 @@ function fill(
     endX,
     endY,
     blockType,
-    dimensionIndex = activeDimension,
+    dimensionIndex = activeDimension
 ) {
     const originalStartX = startX;
     const originalStartY = startY;
@@ -600,13 +578,13 @@ function fill(
 
     for (let x = startX; x <= endX; x += BLOCK_SIZE) {
         for (let y = startY; y <= endY; y += BLOCK_SIZE) {
-            SetBlockTypeAtPosition(
+            setBlockTypeAtPosition(
                 x,
                 y,
                 blockType,
                 false,
                 dimensionIndex,
-                null,
+                null
             );
         }
     }
@@ -614,9 +592,58 @@ function fill(
 
 function worldToBlocks(position) {
     const blockX = Math.floor(position.x / BLOCK_SIZE);
-    const blockY = Math.floor(position.y / BLOCK_SIZE);
+    const blockY = worldToUserBlockY(position.y);
 
     return new Vector2(blockX, blockY);
+}
+
+function worldToUserBlockY(worldY) {
+    return CHUNK_HEIGHT - Math.floor(worldY / BLOCK_SIZE);
+}
+
+function userBlockYToWorld(blockY) {
+    return (CHUNK_HEIGHT - blockY) * BLOCK_SIZE;
+}
+
+function userBlocksToWorldPosition(blockX, blockY) {
+    return new Vector2(blockX * BLOCK_SIZE, userBlockYToWorld(blockY));
+}
+
+function getBlockAtUserBlockPosition(
+    blockX,
+    blockY,
+    wall = false,
+    dimensionIndex = activeDimension
+) {
+    const worldPos = userBlocksToWorldPosition(blockX, blockY);
+    return getBlockAtWorldPosition(
+        worldPos.x,
+        worldPos.y,
+        wall,
+        dimensionIndex
+    );
+}
+
+function setBlockTypeAtUserBlockPosition(
+    blockX,
+    blockY,
+    blockType,
+    wall = false,
+    dimensionIndex = activeDimension,
+    metaData = null,
+    updateAdjacent = true
+) {
+    const worldPos = userBlocksToWorldPosition(blockX, blockY);
+    return setBlockTypeAtPosition(
+        worldPos.x,
+        worldPos.y,
+        blockType,
+        wall,
+        dimensionIndex,
+        metaData,
+        false,
+        updateAdjacent
+    );
 }
 
 function worldToLocal(x, y) {
@@ -628,7 +655,7 @@ function worldToLocal(x, y) {
     return new Vector2(localX, localY);
 }
 
-function GetChunkByIndex(index) {
+function getChunkByIndex(index) {
     // Calculate the world x-coordinate of the chunk based on its index
     const chunkX = index * CHUNK_WIDTH * BLOCK_SIZE;
 
@@ -650,27 +677,27 @@ function getBiomeForNoise(temp, wetness, mountains, biomeSet) {
             return biome;
         }
     }
-    return biomeSet.Plains || Object.values(biomeSet)[0]; // Default to first available biome
+    return biomeSet.Plains || Object.values(biomeSet)[0];
 }
 
 function getBlockWorldPosition(block) {
     return new Vector2(block.transform.position.x, block.transform.position.y);
 }
 
-function GetBlockAtWorldPosition(
+function getBlockAtWorldPosition(
     worldX,
     worldY,
     wall = false,
-    dimensionIndex = activeDimension,
+    dimensionIndex = activeDimension
 ) {
-    const targetChunk = GetChunkForX(worldX, dimensionIndex);
+    const targetChunk = getChunkForX(worldX, dimensionIndex);
     if (!targetChunk || worldY >= CHUNK_HEIGHT * BLOCK_SIZE) return null;
 
     // Subtract the chunk's x offset from the worldX before dividing by BLOCK_SIZE.
     const localX = Math.floor((worldX - targetChunk.x) / BLOCK_SIZE);
     const localY = Math.floor(worldY / BLOCK_SIZE);
 
-    return targetChunk.getBlock(localX, localY, false, wall);
+    return targetChunk.getBlockLocal(localX, localY, wall);
 }
 
 function placePortalInDimension(dimension, position) {
@@ -678,7 +705,7 @@ function placePortalInDimension(dimension, position) {
 
     // Check if there is an existing portal
     for (let x = -range; x <= range; x++) {
-        const chunk = GetChunkForX(position.x + x * BLOCK_SIZE, dimension);
+        const chunk = getChunkForX(position.x + x * BLOCK_SIZE, dimension);
 
         if (chunk) {
             const portals = chunk.getAllBlocks(Blocks.NetherPortal);
@@ -698,14 +725,14 @@ function placePortalInDimension(dimension, position) {
         const blockX = position.x + i * BLOCK_SIZE;
         const blockY = position.y;
 
-        SetBlockTypeAtPosition(
+        setBlockTypeAtPosition(
             blockX,
             blockY,
             Blocks.Obsidian,
             false,
             dimension,
             null,
-            false,
+            false
         );
     }
     // Top
@@ -713,14 +740,14 @@ function placePortalInDimension(dimension, position) {
         const blockX = position.x + i * BLOCK_SIZE;
         const blockY = position.y + BLOCK_SIZE * 4;
 
-        SetBlockTypeAtPosition(
+        setBlockTypeAtPosition(
             blockX,
             blockY,
             Blocks.Obsidian,
             false,
             dimension,
             null,
-            false,
+            false
         );
     }
     // Sides
@@ -728,28 +755,28 @@ function placePortalInDimension(dimension, position) {
         const blockX = position.x;
         const blockY = position.y + i * BLOCK_SIZE;
 
-        SetBlockTypeAtPosition(
+        setBlockTypeAtPosition(
             blockX,
             blockY,
             Blocks.Obsidian,
             false,
             dimension,
             null,
-            false,
+            false
         );
     }
     for (let i = 0; i < 4; i++) {
         const blockX = position.x + BLOCK_SIZE * 3;
         const blockY = position.y + i * BLOCK_SIZE;
 
-        SetBlockTypeAtPosition(
+        setBlockTypeAtPosition(
             blockX,
             blockY,
             Blocks.Obsidian,
             false,
             dimension,
             null,
-            false,
+            false
         );
     }
     // Something to stand on under the portal
@@ -757,14 +784,14 @@ function placePortalInDimension(dimension, position) {
         const blockX = position.x + i * BLOCK_SIZE - BLOCK_SIZE;
         const blockY = position.y + BLOCK_SIZE * 5;
 
-        SetBlockTypeAtPosition(
+        setBlockTypeAtPosition(
             blockX,
             blockY,
             Blocks.Cobblestone,
             false,
             dimension,
             null,
-            false,
+            false
         );
     }
 
@@ -774,21 +801,21 @@ function placePortalInDimension(dimension, position) {
             const blockX = position.x + x * BLOCK_SIZE;
             const blockY = position.y + y * BLOCK_SIZE;
 
-            SetBlockTypeAtPosition(
+            setBlockTypeAtPosition(
                 blockX,
                 blockY,
                 Blocks.NetherPortal,
                 false,
                 dimension,
                 null,
-                false,
+                false
             );
         }
     }
     // Return the bottom center of the portal
     return new Vector2(
         position.x + BLOCK_SIZE * 1.5,
-        position.y + BLOCK_SIZE * 3,
+        position.y + BLOCK_SIZE * 3
     );
 }
 
@@ -802,14 +829,14 @@ function checkAdjacentBlocks(position, wall = false) {
 
     for (const dir of directions) {
         const adjacentPos = new Vector2(position.x + dir.x, position.y + dir.y);
-        const block = GetBlockAtWorldPosition(
+        const block = getBlockAtWorldPosition(
             adjacentPos.x,
             adjacentPos.y,
-            wall,
+            wall
         );
         if (!block) continue;
 
-        const type = GetBlock(block.blockType);
+        const type = getBlock(block.blockType);
         if (block && !type.fluid && !type.air) {
             return true; // Found an adjacent block
         }
@@ -818,26 +845,44 @@ function checkAdjacentBlocks(position, wall = false) {
     return false; // No adjacent block found
 }
 
-function SetBlockTypeAtPosition(
+function setBlockTypeAtPosition(
     worldX,
     worldY,
     blockType,
     wall = false,
     dimensionIndex = activeDimension,
     metaData = null,
-    calculateY = true,
+    inputIsUserBlockY = true,
+    updateAdjacent = false
 ) {
-    if (calculateY) worldY = CHUNK_HEIGHT * BLOCK_SIZE - worldY;
+    if (inputIsUserBlockY) worldY = userBlockYToWorld(worldY / BLOCK_SIZE);
 
-    const block = GetBlockAtWorldPosition(worldX, worldY, wall, dimensionIndex);
-
-    if (!block) {
+    const chunk = getChunkForX(worldX, dimensionIndex);
+    if (!chunk) {
         // Buffer the block placement
-        bufferBlock(worldX, worldY, blockType, dimensionIndex, metaData, wall);
-        return;
+        bufferBlock(
+            worldX,
+            worldY,
+            blockType,
+            dimensionIndex,
+            metaData,
+            wall,
+            false
+        );
+        return false;
     }
 
-    block.setBlockType(blockType);
+    const localX = Math.floor((worldX - chunk.x) / BLOCK_SIZE);
+    const localY = Math.floor(worldY / BLOCK_SIZE);
+
+    return chunk.setBlockTypeLocal(
+        localX,
+        localY,
+        blockType,
+        wall,
+        metaData,
+        updateAdjacent
+    );
 }
 
 function bufferBlock(
@@ -847,9 +892,9 @@ function bufferBlock(
     dimensionIndex = activeDimension,
     metaData = null,
     wall = false,
-    calculateY = true,
+    inputIsUserBlockY = true
 ) {
-    if (calculateY) worldY = CHUNK_HEIGHT * BLOCK_SIZE - worldY;
+    if (inputIsUserBlockY) worldY = userBlockYToWorld(worldY / BLOCK_SIZE);
 
     const targetChunkX = getChunkXForWorldX(worldX);
 
@@ -868,7 +913,7 @@ function bufferBlock(
     });
 }
 
-function GetChunkForX(worldX, dimensionIndex = activeDimension) {
+function getChunkForX(worldX, dimensionIndex = activeDimension) {
     const dimension = dimensions[dimensionIndex];
     const chunkX =
         Math.floor(worldX / (CHUNK_WIDTH * BLOCK_SIZE)) *

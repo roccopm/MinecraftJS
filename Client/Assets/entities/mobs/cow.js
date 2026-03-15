@@ -46,7 +46,7 @@ class Cow extends Mob {
         if (!this.damage(damage)) return;
 
         this.knockBack(hitfromX, kb);
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Cow_Hurt,
             positional: true,
             origin: this.position,
@@ -55,7 +55,7 @@ class Cow extends Mob {
 
     dieEvent() {
         this.dropLoot();
-        PlayRandomSoundFromArray({
+        playRandomSoundFromArray({
             array: Sounds.Cow_Say,
             positional: true,
             origin: this.position,

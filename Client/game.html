@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -44,31 +44,92 @@
                     >
                     <button
                         class="btn"
-                        onclick="if(typeof SaveWorld==='function')SaveWorld(false);window.location.href='index.html'"
+                        onclick="
+                            if (typeof SaveWorld === 'function')
+                                SaveWorld(false);
+                            window.location.href = 'index.html';
+                        "
                     >
                         Save and Quit to Title
                     </button>
                 </div>
 
                 <div class="pause-menu-page" data-page="2">
-                    <h2 class="input-field-title pause-menu-title">Debug Menu</h2>
-                    <button class="btn" onclick="pauseMenu.setPage(1)">Back</button>
-                    <button class="btn" onclick="if(typeof SaveWorld==='function')SaveWorld()">Save World</button>
-                    <button class="btn" onclick="if(typeof SaveWorld==='function')SaveWorld(false, true)">Save World File</button>
-                    <button class="btn" id="debug-chunk-borders" onclick="toggleChunkBorders()">Chunk Borders</button>
-                    <button class="btn" id="debug-camera" onclick="toggleCamera()">Camera</button>
-                    <button class="btn" id="debug-hitbox" onclick="toggleHitbox()">Hitbox</button>
-                    <button class="btn" id="debug-print-block" onclick="togglePrintBlock()">Print Block</button>
-                    <button class="btn" id="debug-file-size" onclick="toggleFileSize()">File Size</button>
-                    <button class="btn" id="debug-fps" onclick="toggleFps()">FPS</button>
-                    <button class="btn" id="debug-coords" onclick="toggleCoordinates()">Coords</button>
+                    <h2 class="input-field-title pause-menu-title">
+                        Debug Menu
+                    </h2>
+                    <button class="btn" onclick="pauseMenu.setPage(1)">
+                        Back
+                    </button>
+                    <button
+                        class="btn"
+                        onclick="
+                            if (typeof SaveWorld === 'function') SaveWorld();
+                        "
+                    >
+                        Save World
+                    </button>
+                    <button
+                        class="btn"
+                        onclick="
+                            if (typeof SaveWorld === 'function')
+                                SaveWorld(false, true);
+                        "
+                    >
+                        Save World File
+                    </button>
+                    <button
+                        class="btn"
+                        id="debug-chunk-borders"
+                        onclick="toggleChunkBorders()"
+                    >
+                        Chunk Borders
+                    </button>
+                    <button
+                        class="btn"
+                        id="debug-camera"
+                        onclick="toggleCamera()"
+                    >
+                        Camera
+                    </button>
+                    <button
+                        class="btn"
+                        id="debug-hitbox"
+                        onclick="toggleHitbox()"
+                    >
+                        Hitbox
+                    </button>
+                    <button
+                        class="btn"
+                        id="debug-print-block"
+                        onclick="togglePrintBlock()"
+                    >
+                        Print Block
+                    </button>
+                    <button
+                        class="btn"
+                        id="debug-file-size"
+                        onclick="toggleFileSize()"
+                    >
+                        File Size
+                    </button>
+                    <button class="btn" id="debug-fps" onclick="toggleFps()">
+                        FPS
+                    </button>
+                    <button
+                        class="btn"
+                        id="debug-coords"
+                        onclick="toggleCoordinates()"
+                    >
+                        Coords
+                    </button>
                 </div>
             </div>
         </div>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script src="node_modules/tooloud/dist/tooloud.min.js"></script>
-        
+
         <script src="Assets/utils/indexDB.js"></script>
 
         <script src="Assets/utils/globals.js"></script>

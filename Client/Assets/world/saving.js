@@ -7,7 +7,7 @@ setInterval(() => {
 function autoSave() {
     if (loadingWorld) return;
     if (multiplayer) return;
-    SaveWorld(false);
+    saveWorld(false);
 
     chat.message("World auto-saved successfully!", "", Colors.Green);
 }
@@ -22,7 +22,7 @@ let currentSave = {
     dimensions: [], // Array of { index, chunks: [{ x, biome, previousChunk, blocks, walls }] }
 };
 
-function SaveWorld(message = true, toFile = false) {
+function saveWorld(message = true, toFile = false) {
     let savedDimensions = [];
 
     // Save chunks and pendingBlocks for each dimension
@@ -30,7 +30,7 @@ function SaveWorld(message = true, toFile = false) {
         let savedChunks = [];
         dimension.chunks.forEach((chunk) => {
             ``;
-            const newSaveChunk = SaveChunk(chunk);
+            const newSaveChunk = saveChunk(chunk);
             savedChunks.push({
                 x: chunk.x,
                 biome: {
@@ -138,7 +138,7 @@ function SaveWorld(message = true, toFile = false) {
     localStorage.setItem(id, saveData);
 }
 
-function SaveChunk(chunk) {
+function saveChunk(chunk) {
     let blocks = [];
     let walls = [];
 
@@ -183,7 +183,7 @@ function SaveChunk(chunk) {
     };
 }
 
-function LoadWorldFromLocalStorage() {
+function loadWorldFromLocalStorage() {
     let selectedWorld = localStorage.getItem("selectedWorld");
 
     if (selectedWorld) {
@@ -192,7 +192,7 @@ function LoadWorldFromLocalStorage() {
     } else {
         if (SPAWN_PLAYER) {
             setTimeout(() => {
-                SpawnPlayer();
+                spawnPlayer();
             }, 100);
         }
 
@@ -204,23 +204,23 @@ function LoadWorldFromLocalStorage() {
     if (!selectedWorldData) {
         console.log("World not found in local storage", selectedWorld);
         chat.welcomeMessage();
-        if (selectedWorld.seed) LoadCustomSeed(selectedWorld.seed);
+        if (selectedWorld.seed) loadCustomSeed(selectedWorld.seed);
         if (SPAWN_PLAYER) {
             setTimeout(() => {
-                SpawnPlayer();
+                spawnPlayer();
                 player.setGamemode(selectedWorld.gameMode);
                 setTimeout(() => {
-                    SaveWorld(false);
+                    saveWorld(false);
                 }, 1500);
             }, 100);
         }
         return;
     }
 
-    LoadWorld(selectedWorldData);
+    loadWorld(selectedWorldData);
 }
 
-async function LoadWorld(save) {
+async function loadWorld(save) {
     if (!isTexturePackLoaded) {
         await waitForTexturePack();
     }
@@ -234,7 +234,7 @@ async function LoadWorld(save) {
 
     loadingWorld = true;
 
-    LoadCustomSeed(currentSave.seed);
+    loadCustomSeed(currentSave.seed);
 
     // Clear chunks and pendingBlocks for all dimensions
     dimensions.forEach((dimension) => {
@@ -252,7 +252,7 @@ async function LoadWorld(save) {
 
             // Load chunks
             dimData.chunks.forEach((chunk) => {
-                LoadChunk(
+                loadChunk(
                     chunk.x,
                     chunk,
                     dimData.index,
@@ -279,7 +279,7 @@ async function LoadWorld(save) {
         // Fallback for older saves with global pendingBlocks
         const dimension = getDimension(Dimensions.Overworld);
         currentSave.chunks.forEach((chunk) => {
-            LoadChunk(
+            loadChunk(
                 chunk.x,
                 chunk,
                 Dimensions.Overworld,
@@ -319,7 +319,7 @@ async function LoadWorld(save) {
 
         setTimeout(() => {
             const position = JSON.parse(currentSave.playerPosition);
-            SpawnPlayer(new Vector2(position.x, position.y), false);
+            spawnPlayer(new Vector2(position.x, position.y), false);
 
             const playerInventory = JSON.parse(currentSave.inventoryItems);
             for (let i = 0; i < playerInventory.length; i++) {
@@ -360,7 +360,7 @@ async function LoadWorld(save) {
             if (currentSave.activeDimension !== undefined)
                 gotoDimension(currentSave.activeDimension);
 
-            SaveWorld(false);
+            saveWorld(false);
         }, 100);
     }
 
@@ -369,7 +369,7 @@ async function LoadWorld(save) {
     }, 500);
 }
 
-async function LoadChunk(
+async function loadChunk(
     x,
     chunk,
     dimensionIndex = Dimensions.Overworld,
@@ -413,13 +413,12 @@ async function LoadChunk(
             const blockType = blockData.t ? blockData.t : blockData;
             const metaData = blockData.m ? blockData.m : null;
 
-            constructedChunk.setBlockType(
+            constructedChunk.setBlockTypeLocal(
                 x,
                 y,
                 blockType,
                 false,
                 metaData,
-                false, // Skip calculateY since we're in chunk-local coordinates
                 false, // Skip updateBlocks to do it in a second pass
                 false,
             );
@@ -429,13 +428,12 @@ async function LoadChunk(
             const wallType = wallData.t ? wallData.t : wallData;
             const wallMetaData = wallData.m ? JSON.parse(wallData.m) : null;
 
-            constructedChunk.setBlockType(
+            constructedChunk.setBlockTypeLocal(
                 x,
                 y,
                 wallType,
                 true,
                 wallMetaData,
-                false,
                 false,
                 false,
             );
