@@ -1750,10 +1750,15 @@ class Player extends Entity {
     }
 }
 
-const skinData = localStorage.getItem("playerSkin");
 function createPlayerBody() {
+    const selectedSkin = localStorage.getItem("playerSkin");
+    let sprite = selectedSkin || "player/steve";
+    if (sprite === "custom") {
+        const customData = localStorage.getItem("customPlayerSkin");
+        sprite = customData || "player/steve";
+    }
     return new Body({
-        sprite: skinData || "player/steve",
+        sprite,
         parts: {
             head: new BodyPart({
                 spriteCrop: { x: 0, y: 8, width: 8, height: 8 },

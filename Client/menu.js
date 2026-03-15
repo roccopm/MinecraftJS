@@ -52,6 +52,7 @@ const sfxVolumeLabel = document.getElementById("sfx-volume-label");
 const lightingToggleButton = document.getElementById("lighting-toggle-btn");
 const usernameInput = document.querySelector("#username-input");
 const usernameFooter = document.querySelector("#username-footer");
+const playerSkinSelect = document.getElementById("player-skin-select");
 
 let selectedWorld = null;
 let selectedTexturePack = "default";
@@ -201,6 +202,21 @@ function loadSettings() {
     setUsernameFooter(currentSettings.username);
 
     usernameInput.value = "";
+
+    if (playerSkinSelect) {
+        let selectedSkin = localStorage.getItem("playerSkin");
+        // Migrate legacy base64 in playerSkin to customPlayerSkin
+        if (selectedSkin && selectedSkin.startsWith("data:")) {
+            localStorage.setItem("customPlayerSkin", selectedSkin);
+            localStorage.setItem("playerSkin", "custom");
+            selectedSkin = "custom";
+        }
+        if (selectedSkin === "custom" || (selectedSkin && playerSkinSelect.querySelector(`option[value="${selectedSkin}"]`))) {
+            playerSkinSelect.value = selectedSkin;
+        } else {
+            playerSkinSelect.value = "player/steve";
+        }
+    }
 }
 
 if (musicVolumeSlider) {
@@ -217,6 +233,12 @@ if (sfxVolumeSlider) {
 }
 
 loadSettings();
+
+if (playerSkinSelect) {
+    playerSkinSelect.addEventListener("change", () => {
+        localStorage.setItem("playerSkin", playerSkinSelect.value);
+    });
+}
 
 function showTexturePacks() {
     hideMenu();
@@ -491,7 +513,9 @@ function uploadSkin() {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const skinData = event.target.result;
-                localStorage.setItem("playerSkin", skinData);
+                localStorage.setItem("customPlayerSkin", skinData);
+                localStorage.setItem("playerSkin", "custom");
+                if (playerSkinSelect) playerSkinSelect.value = "custom";
                 alert("Skin uploaded successfully!");
             };
             reader.readAsDataURL(file);
@@ -504,9 +528,11 @@ function uploadSkin() {
 }
 
 function clearSkin() {
-    if (confirm("Are you sure you want to remove your skin?")) {
-        localStorage.removeItem("playerSkin");
-        alert("Skin removed successfully!");
+    if (confirm("Are you sure you want to remove your custom skin?")) {
+        localStorage.removeItem("customPlayerSkin");
+        localStorage.setItem("playerSkin", "player/steve");
+        if (playerSkinSelect) playerSkinSelect.value = "player/steve";
+        alert("Custom skin removed.");
     }
 }
 
